@@ -561,7 +561,17 @@ const API_URL = 'https://ledgerly-backend-lsyz.onrender.com/api';
 const UPLOAD_URL = 'https://ledgerly-backend-lsyz.onrender.com/api/upload';
 
 // --- 2. DATA API (PRODUCTION READY) ---
-const DataAPI = {
+const DataAPI = { 
+    showToast: function(msg, type='success') { 
+        const container = document.getElementById('toast-container');
+        if(!container) return;
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.innerHTML = `<span>${type==='success'?'✅':(type==='error'?'❌':'⚠️')}</span> ${msg}`;
+        container.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    },
+    
     getToken: () => localStorage.getItem('ledgerly_token'),
     setToken: (token) => localStorage.setItem('ledgerly_token', token),
     clearToken: () => localStorage.removeItem('ledgerly_token'),
@@ -1156,3 +1166,4 @@ function showToast(msg, type='success') {
 </script>
 </body>
 </html>
+

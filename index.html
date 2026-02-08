@@ -335,7 +335,7 @@ input, select {
 const COA = {
     Asset: ['Cash', 'Bank', 'Equipment', 'Input Tax Credit', 'Receivables'],
     Liability: ['Term Loan', 'GST Payable', 'Vendor Payables'],
-    Income: ['Sales', 'Service Income', 'Refunds'], // Added Refunds
+    Income: ['Sales', 'Service Income', 'Refunds'], 
     Expense: ['Rent', 'Salary', 'Utilities', 'Office Supplies', 'Professional Fees'],
     Equity: ['Capital']
 };
@@ -375,7 +375,6 @@ const COA = {
         <h2 style="margin:0; font-size: 1.2rem;" id="page-title">Dashboard</h2>
     </div>
     <div style="display:flex; gap:10px; align-items:center;">
-        <!-- SERVER STATUS INDICATOR -->
         <div id="server-status" class="server-status" title="Connection to Node.js Backend">Offline</div>
         
         <select id="business-switcher" style="padding:0.5rem; border:1px solid var(--border); border-radius:6px;" onchange="app.switchBusiness(this.value)">
@@ -391,9 +390,11 @@ const COA = {
 <section id="view-auth" class="view-section active" style="max-width:400px; margin: 50px auto;">
     <div class="card">
         <h2 style="text-align:center; margin-bottom:20px;">Ledgerly.ai Login</h2>
+        
+        <!-- FIX: Added IDs to buttons to swap styles via JS -->
         <div style="display:flex; gap:10px; margin-bottom:20px;">
-            <button class="btn btn-outline" style="flex:1;" onclick="app.setAuthMode('login')">Login</button>
-            <button class="btn btn-primary" style="flex:1;" onclick="app.setAuthMode('register')">Register</button>
+            <button id="btn-auth-login" class="btn btn-primary" style="flex:1;" onclick="app.setAuthMode('login')">Login</button>
+            <button id="btn-auth-register" class="btn btn-outline" style="flex:1;" onclick="app.setAuthMode('register')">Register</button>
         </div>
         
         <div id="auth-form-container">
@@ -406,7 +407,7 @@ const COA = {
     </div>
 </section>
 <!-- 1. DASHBOARD -->
-<section id="view-dashboard" class="view-section active">
+<section id="view-dashboard" class="view-section">
     <div class="grid-3">
         <div class="card">
             <div style="color:var(--text-muted); font-size:0.8rem;">Cash & Bank</div>
@@ -488,6 +489,13 @@ const COA = {
         <button class="btn btn-outline" style="padding:4px 8px;" onclick="app.closeModal()">✕</button>
     </div>
     <input type="hidden" id="edit-id">
+    
+    <!-- FIX 2: Added missing Description Input -->
+    <div style="margin-bottom:10px;">
+        <label style="font-size:0.75rem; font-weight:600;">Description</label>
+        <input type="text" id="edit-desc" style="width:100%;">
+    </div>
+
     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
         <div>
             <label style="font-size:0.75rem; font-weight:600;">Net Amount</label>
@@ -546,13 +554,14 @@ const COA = {
 </div>
 <div class="toast-container" id="toast-container"></div>
 <script>
-// --- 1. CONFIG ---
-const API_URL = 'https://ledgerly-backend-lsyz.onrender.com/api/sync';
+// --- 1. CONFIG (BACKEND CONNECTION) ---
+// NOTE: I removed '/sync' from API_URL to prevent 404 errors.
+// The code below automatically appends '/sync' or '/auth/login' to this base URL.
+const API_URL = 'https://ledgerly-backend-lsyz.onrender.com/api'; 
 const UPLOAD_URL = 'https://ledgerly-backend-lsyz.onrender.com/api/upload';
 
 // --- 2. DATA API (PRODUCTION READY) ---
 const DataAPI = {
-    // Store token in localStorage
     getToken: () => localStorage.getItem('ledgerly_token'),
     setToken: (token) => localStorage.setItem('ledgerly_token', token),
     clearToken: () => localStorage.removeItem('ledgerly_token'),
@@ -574,10 +583,10 @@ const DataAPI = {
             const options = { method, headers };
             if (body) options.body = JSON.stringify(body);
 
+            // Concatenate Base URL + Endpoint correctly
             const response = await fetch(`${API_URL}${endpoint}`, options);
             
             if (response.status === 401) {
-                // Token expired or invalid
                 this.clearToken();
                 app.navigate('auth');
                 this.setStatus('offline');
@@ -613,10 +622,9 @@ const DataAPI = {
     },
 
     async uploadFile(file) {
-        // Similar to before, but need token
         const formData = new FormData();
         formData.append('file', file);
-        const response = await fetch(`${API_URL}/upload`, {
+        const response = await fetch(UPLOAD_URL, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${this.getToken()}` },
             body: formData
@@ -629,24 +637,22 @@ const DataAPI = {
 // --- 3. STATE (UPDATED FOR DB) ---
 const State = {
     currentUser: null,
-    currentBizId: null, // This is now the DB ID, not "biz1"
+    currentBizId: null, 
     transactions: [],
-    businesses: [], // Array of {id, name}
+    businesses: [], 
     pendingTx: null,
     importBatch: [],
     
-    // Helpers to mimic old structure for compatibility
     get biz() {
         return {
             transactions: this.transactions.filter(t => t.businessId == this.currentBizId),
-            lockedMonths: [] // Implement logic from backend later
+            lockedMonths: [] 
         };
     },
 
     async init() {
         const token = DataAPI.getToken();
         if (token) {
-            // Try to fetch data
             const data = await DataAPI.getSync();
             if (data && data.user) {
                 this.currentUser = data.user;
@@ -658,7 +664,6 @@ const State = {
                     app.updateBusinessSelect();
                     app.navigate('dashboard');
                 } else {
-                    // Should not happen as backend creates default business
                     alert("No businesses found.");
                 }
             } else {
@@ -670,8 +675,6 @@ const State = {
     },
 
     async save() {
-        // We only send modified transactions? 
-        // For MVP, sending the whole list of the current business
         const bizTransactions = this.transactions.filter(t => t.businessId == this.currentBizId);
         await DataAPI.saveSync(bizTransactions);
         app.renderDashboard();
@@ -682,7 +685,7 @@ const State = {
         const entries = app.generateJournalEntries(tx);
         const fullTx = { 
             ...tx, 
-            id: Date.now(), // Use timestamp as temp ID, DB will replace it
+            id: Date.now(), 
             businessId: this.currentBizId, 
             status: 'draft', 
             entries,
@@ -693,7 +696,6 @@ const State = {
     },
     
     async delete(id) {
-        // In frontend we filter out, backend handles logic in real app
         this.transactions = this.transactions.filter(t => t.id != id);
         await this.save();
     },
@@ -706,10 +708,24 @@ const State = {
 
 // --- 4. APP CONTROLLER ---
 const app = {
-    authMode: 'login', // or 'register'
+    reportView: 'pl', 
+    authMode: 'login', 
 
+    // FIX 3: Updated setAuthMode to swap button styles
     setAuthMode(mode) {
         this.authMode = mode;
+        
+        const btnLogin = document.getElementById('btn-auth-login');
+        const btnRegister = document.getElementById('btn-auth-register');
+
+        if (mode === 'login') {
+            btnLogin.className = 'btn btn-primary';
+            btnRegister.className = 'btn btn-outline';
+        } else {
+            btnLogin.className = 'btn btn-outline';
+            btnRegister.className = 'btn btn-primary';
+        }
+
         document.getElementById('auth-name').classList.toggle('hidden', mode === 'login');
     },
 
@@ -752,18 +768,8 @@ const app = {
             select.appendChild(opt);
         });
     },
-
-    // ... include all previous functions (generateJournalEntries, getBalances, NLP, renderReports) EXACTLY as they were ...
-    // They work because State.biz filters the transactions correctly.
     
-    // Copy-paste the functions from your previous file here:
-    // formatCurrency, calculateGST, generateJournalEntries, getBalances, 
-    // processChatInput, renderConfirmationCard, confirmPending, startVoice, 
-    // renderDashboard, renderReports, etc.
-    
-    // Helper for HTML Injection since we are in a new script tag
     init: function() { 
-        // Load COA Datalist
         const dl = document.getElementById('category-suggestions');
         if(dl && COA) { Object.values(COA).flat().forEach(c => {
             const opt = document.createElement('option'); opt.value = c; dl.appendChild(opt);
@@ -772,8 +778,7 @@ const app = {
     }
 };
 
-// --- 5. CORE ENGINE (Copy Paste from previous version) ---
-// (I will paste the critical functions here so the file is complete)
+// --- 5. CORE ENGINE ---
 app.formatCurrency = (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
 app.calculateGST = (amount, rate, isInclusive) => {
     let base = 0, gst = 0;
@@ -861,7 +866,6 @@ app.navigate = function(view) {
     
     document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
     
-    // If Auth view, hide sidebar
     if (view === 'auth') {
         document.querySelector('.sidebar').style.display = 'none';
         document.querySelector('header').style.display = 'none';
@@ -883,9 +887,10 @@ app.renderDashboard = function() {
     tbody.innerHTML = '';
     State.biz.transactions.slice(0, 10).forEach(t => {
         const tr = document.createElement('tr');
-        const canEdit = State.currentUser.role !== 'viewer';
-        const isLocked = false; // Simplify lock check for MVP
+        const isLocked = false; 
         const gstBadge = t.gstRate > 0 ? `<span class="badge" style="background:#dcfce7; color:#166534;">${t.gstRate}% GST</span>` : '-';
+        
+        // FIX 3: Added Edit Button back
         tr.innerHTML = `
             <td>${t.date}</td>
             <td>${t.desc}</td>
@@ -893,23 +898,62 @@ app.renderDashboard = function() {
             <td>${gstBadge}</td>
             <td style="font-weight:600;">${this.formatCurrency(t.netAmount)}</td>
             <td><span class="badge">${t.status}</span></td>
-            <td>${!isLocked ? `<button class="btn btn-outline" style="padding:2px 6px; font-size:0.7rem;" onclick="app.deleteTx(${t.id})">Del</button>` : ''}</td>
+            <td>
+                <button class="btn btn-outline" style="padding:2px 6px; font-size:0.7rem;" onclick="app.openEdit(${t.id})">Edit</button>
+                ${!isLocked ? `<button class="btn btn-outline" style="padding:2px 6px; font-size:0.7rem;" onclick="app.deleteTx(${t.id})">Del</button>` : ''}
+            </td>
         `;
         tbody.appendChild(tr);
     });
 };
 app.renderReports = function() {
     const b = this.getBalances();
-    // Simplified P&L for brevity
-    document.getElementById('report-title').innerText = "Profit & Loss";
-    document.getElementById('report-display').innerHTML = `
-        <div style="border-bottom:1px solid #eee; font-weight:bold;">INCOME</div>
-        <div style="display:flex; justify-content:space-between;"><span>Revenue</span><span>${this.formatCurrency(b.income)}</span></div>
-        <div style="border-bottom:1px solid #eee; font-weight:bold; margin-top:10px;">EXPENSES</div>
-        <div style="display:flex; justify-content:space-between;"><span>Operating</span><span>(${this.formatCurrency(b.expense)})</span></div>
-        <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:10px; color:${b.netProfit>=0?'var(--success)':'var(--danger)'}">
-            <span>Net Profit</span><span>${this.formatCurrency(b.netProfit)}</span>
-        </div>`;
+    const totalAssets = b.cash + b.bank + b.assets;
+    const totalEquity = b.liabilities + b.totalEquity;
+    
+    // FIX 4: Added logic to handle different report views
+    if (this.reportView === 'pl') {
+        document.getElementById('report-title').innerText = "Profit & Loss";
+        document.getElementById('report-display').innerHTML = `
+            <div style="border-bottom:1px solid #eee; font-weight:bold;">INCOME</div>
+            <div style="display:flex; justify-content:space-between;"><span>Revenue</span><span>${this.formatCurrency(b.income)}</span></div>
+            <div style="border-bottom:1px solid #eee; font-weight:bold; margin-top:10px;">EXPENSES</div>
+            <div style="display:flex; justify-content:space-between;"><span>Operating</span><span>(${this.formatCurrency(b.expense)})</span></div>
+            <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:10px; color:${b.netProfit>=0?'var(--success)':'var(--danger)'}">
+                <span>Net Profit</span><span>${this.formatCurrency(b.netProfit)}</span>
+            </div>`;
+    } else if (this.reportView === 'bs') {
+        document.getElementById('report-title').innerText = "Balance Sheet";
+        const balanced = Math.abs(totalAssets - totalEquity) < 1;
+        document.getElementById('report-display').innerHTML = `
+            <div style="border-bottom:1px solid #eee; font-weight:bold;">ASSETS</div>
+            <div style="display:flex; justify-content:space-between;"><span>Cash & Bank</span><span>${this.formatCurrency(b.cash + b.bank)}</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Fixed Assets</span><span>${this.formatCurrency(b.assets)}</span></div>
+            <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:5px;"><span>TOTAL ASSETS</span><span>${this.formatCurrency(totalAssets)}</span></div>
+            <div style="height:20px;"></div>
+            <div style="border-bottom:1px solid #eee; font-weight:bold;">EQUITY & LIABILITIES</div>
+            <div style="display:flex; justify-content:space-between;"><span>Liabilities</span><span>${this.formatCurrency(b.liabilities)}</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Owner's Capital</span><span>${this.formatCurrency(b.capital)}</span></div>
+            <div style="display:flex; justify-content:space-between;"><span>Retained Earnings</span><span>${this.formatCurrency(b.retainedEarnings)}</span></div>
+            <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:5px;"><span>TOTAL</span><span>${this.formatCurrency(totalEquity)}</span></div>
+            <div style="margin-top:10px; padding:5px; background:${balanced?'#dcfce7':'#fee2e2'}; text-align:center; font-weight:bold;">
+                ${balanced ? 'BALANCED ✅' : 'UNBALANCED ❌'}
+            </div>`;
+    } else if (this.reportView === 'cf') {
+        document.getElementById('report-title').innerText = "Cash Flow Statement";
+        document.getElementById('report-display').innerHTML = `
+            <div style="border-bottom:1px solid #eee; font-weight:bold;">OPERATING ACTIVITIES</div>
+            <div style="display:flex; justify-content:space-between;"><span>Net Cash Flow from Ops</span><span style="color:${b.operating>=0?'var(--success)':'var(--danger)'}">${this.formatCurrency(b.operating)}</span></div>
+            <div style="height:20px;"></div>
+            <div style="border-bottom:1px solid #eee; font-weight:bold;">INVESTING ACTIVITIES</div>
+            <div style="display:flex; justify-content:space-between;"><span>Net Cash Flow from Investing</span><span style="color:${b.investing>=0?'var(--success)':'var(--danger)'}">${this.formatCurrency(b.investing)}</span></div>
+            <div style="height:20px;"></div>
+            <div style="border-bottom:1px solid #eee; font-weight:bold;">FINANCING ACTIVITIES</div>
+            <div style="display:flex; justify-content:space-between;"><span>Net Cash Flow from Financing</span><span style="color:${b.financing>=0?'var(--success)':'var(--danger)'}">${this.formatCurrency(b.financing)}</span></div>
+            <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:10px;">
+                <span>Net Change in Cash</span><span>${this.formatCurrency(b.operating + b.investing + b.financing)}</span>
+            </div>`;
+    }
 }
 app.processChatInput = function() {
     const input = document.getElementById('chat-input');
@@ -947,7 +991,10 @@ app.renderConfirmationCard = function(tx) {
 app.confirmPending = async function() {
     if(State.pendingTx) {
         await State.add(State.pendingTx);
-        await State.confirmTransaction(State.biz.transactions[0].id);
+        // Assuming newly added transaction is first one
+        const newTxId = State.biz.transactions[0].id;
+        await State.confirmTransaction(newTxId);
+        
         document.getElementById('confirm-container').innerHTML = '';
         const history = document.getElementById('chat-history');
         const aMsg = document.createElement('div');
@@ -1011,7 +1058,6 @@ app.switchReport = function(v) {
     this.renderReports();
 }
 State.confirmTransaction = async function(id) {
-    // Mark as confirmed locally
     const idx = this.transactions.findIndex(t => t.id == id);
     if(idx > -1) {
         this.transactions[idx].status = 'confirmed';
@@ -1041,9 +1087,11 @@ const NLP = {
 
 // Init
 app.init();
-// --- MISSING UI HELPERS (Add these to the bottom of your script) ---
+
+// --- MISSING UI HELPERS ---
 
 app.switchRole = function(role) {
+    if(!State.currentUser) return;
     State.currentUser.role = role;
     const badge = document.getElementById('current-role-badge');
     if(badge) {
@@ -1059,7 +1107,7 @@ app.openEdit = function(id) {
     if(!t) return;
     
     document.getElementById('edit-id').value = t.id;
-    document.getElementById('edit-desc').value = t.desc;
+    document.getElementById('edit-desc').value = t.desc; 
     document.getElementById('edit-amount').value = t.netAmount;
     document.getElementById('edit-category').value = t.category;
     document.getElementById('edit-date').value = t.date;
@@ -1083,12 +1131,9 @@ app.saveEdit = async function() {
         accountType: document.getElementById('edit-account-type').value
     };
     
-    // Find transaction in the full list
     const idx = State.transactions.findIndex(t => t.id == id);
     if(idx > -1) {
-        // Merge updates
         State.transactions[idx] = { ...State.transactions[idx], ...updates };
-        // Recalculate entries logic would go here, for now we save directly
         await State.save(); 
     }
     this.closeModal();
@@ -1099,7 +1144,6 @@ app.closeModal = function() {
     if(modal) modal.classList.remove('active');
 }
 
-// Global Toast Function
 function showToast(msg, type='success') {
     const container = document.getElementById('toast-container');
     if(!container) return;
@@ -1111,5 +1155,4 @@ function showToast(msg, type='success') {
 }
 </script>
 </body>
-
 </html>

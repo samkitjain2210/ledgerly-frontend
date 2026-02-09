@@ -345,7 +345,8 @@ const COA = {
 <!-- SIDEBAR -->
 <nav class="sidebar">
 <div class="brand">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    <!-- Using Text/Emoji for stability -->
+    <span style="font-size:1.5rem;">📓</span>
     <span>Ledgerly.ai</span>
     <span style="font-size:0.6rem; background:var(--success); padding:2px 4px; border-radius:4px;">v4.3</span>
 </div>
@@ -375,7 +376,8 @@ const COA = {
         <h2 style="margin:0; font-size: 1.2rem;" id="page-title">Dashboard</h2>
     </div>
     <div style="display:flex; gap:10px; align-items:center;">
-        <div id="server-status" class="server-status" title="Connection to Node.js Backend">Offline</div>
+        <!-- SERVER STATUS INDICATOR -->
+        <div id="server-status" class="server-status" title="Connection to Render Backend">Offline</div>
         
         <select id="business-switcher" style="padding:0.5rem; border:1px solid var(--border); border-radius:6px;" onchange="app.switchBusiness(this.value)">
             <option value="biz1">My General Store</option>
@@ -391,7 +393,7 @@ const COA = {
     <div class="card">
         <h2 style="text-align:center; margin-bottom:20px;">Ledgerly.ai Login</h2>
         
-        <!-- FIX: Added IDs to buttons to swap styles via JS -->
+        <!-- Toggle Buttons -->
         <div style="display:flex; gap:10px; margin-bottom:20px;">
             <button id="btn-auth-login" class="btn btn-primary" style="flex:1;" onclick="app.setAuthMode('login')">Login</button>
             <button id="btn-auth-register" class="btn btn-outline" style="flex:1;" onclick="app.setAuthMode('register')">Register</button>
@@ -490,7 +492,7 @@ const COA = {
     </div>
     <input type="hidden" id="edit-id">
     
-    <!-- FIX 2: Added missing Description Input -->
+    <!-- Description Input -->
     <div style="margin-bottom:10px;">
         <label style="font-size:0.75rem; font-weight:600;">Description</label>
         <input type="text" id="edit-desc" style="width:100%;">
@@ -555,23 +557,11 @@ const COA = {
 <div class="toast-container" id="toast-container"></div>
 <script>
 // --- 1. CONFIG (BACKEND CONNECTION) ---
-// NOTE: I removed '/sync' from API_URL to prevent 404 errors.
-// The code below automatically appends '/sync' or '/auth/login' to this base URL.
-const API_URL = 'https://ledgerly-backend-lsyz.onrender.com/api'; 
+const API_URL = 'https://ledgerly-backend-lsyz.onrender.com/api'; // CONNECTED TO RENDER
 const UPLOAD_URL = 'https://ledgerly-backend-lsyz.onrender.com/api/upload';
 
 // --- 2. DATA API (PRODUCTION READY) ---
-const DataAPI = { 
-    showToast: function(msg, type='success') { 
-        const container = document.getElementById('toast-container');
-        if(!container) return;
-        const toast = document.createElement('div');
-        toast.className = `toast ${type}`;
-        toast.innerHTML = `<span>${type==='success'?'✅':(type==='error'?'❌':'⚠️')}</span> ${msg}`;
-        container.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    },
-    
+const DataAPI = {
     getToken: () => localStorage.getItem('ledgerly_token'),
     setToken: (token) => localStorage.setItem('ledgerly_token', token),
     clearToken: () => localStorage.removeItem('ledgerly_token'),
@@ -593,7 +583,6 @@ const DataAPI = {
             const options = { method, headers };
             if (body) options.body = JSON.stringify(body);
 
-            // Concatenate Base URL + Endpoint correctly
             const response = await fetch(`${API_URL}${endpoint}`, options);
             
             if (response.status === 401) {
@@ -610,7 +599,7 @@ const DataAPI = {
         } catch (e) {
             console.error(e);
             this.setStatus('offline');
-            app.showToast('Server Error', 'error');
+            showToast('Server Error', 'error');
             return null;
         }
     },
@@ -721,7 +710,6 @@ const app = {
     reportView: 'pl', 
     authMode: 'login', 
 
-    // FIX 3: Updated setAuthMode to swap button styles
     setAuthMode(mode) {
         this.authMode = mode;
         
@@ -900,7 +888,6 @@ app.renderDashboard = function() {
         const isLocked = false; 
         const gstBadge = t.gstRate > 0 ? `<span class="badge" style="background:#dcfce7; color:#166534;">${t.gstRate}% GST</span>` : '-';
         
-        // FIX 3: Added Edit Button back
         tr.innerHTML = `
             <td>${t.date}</td>
             <td>${t.desc}</td>
@@ -921,7 +908,6 @@ app.renderReports = function() {
     const totalAssets = b.cash + b.bank + b.assets;
     const totalEquity = b.liabilities + b.totalEquity;
     
-    // FIX 4: Added logic to handle different report views
     if (this.reportView === 'pl') {
         document.getElementById('report-title').innerText = "Profit & Loss";
         document.getElementById('report-display').innerHTML = `
@@ -1001,7 +987,6 @@ app.renderConfirmationCard = function(tx) {
 app.confirmPending = async function() {
     if(State.pendingTx) {
         await State.add(State.pendingTx);
-        // Assuming newly added transaction is first one
         const newTxId = State.biz.transactions[0].id;
         await State.confirmTransaction(newTxId);
         
@@ -1095,8 +1080,17 @@ const NLP = {
     }
 }
 
-// Init
-app.init();
+// --- GLOBAL UTILITIES ---
+// FIX FOR CONSOLE ERROR: Define Global Toast
+function showToast(msg, type='success') {
+    const container = document.getElementById('toast-container');
+    if(!container) return;
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `<span>${type==='success'?'✅':(type==='error'?'❌':'⚠️')}</span> ${msg}`;
+    container.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+}
 
 // --- MISSING UI HELPERS ---
 
@@ -1154,16 +1148,8 @@ app.closeModal = function() {
     if(modal) modal.classList.remove('active');
 }
 
-function showToast(msg, type='success') {
-    const container = document.getElementById('toast-container');
-    if(!container) return;
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `<span>${type==='success'?'✅':(type==='error'?'❌':'⚠️')}</span> ${msg}`;
-    container.appendChild(toast);
-    setTimeout(() => toast.remove(), 3000);
-}
+// Init
+app.init();
 </script>
 </body>
 </html>
-

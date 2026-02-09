@@ -945,6 +945,8 @@ app.renderReports = function() {
             </div>`;
     }
 }
+// --- REPLACE THIS FUNCTION ENTIRELY ---
+
 app.processChatInput = async function() {
     const input = document.getElementById('chat-input');
     const text = input.value.trim();
@@ -957,19 +959,49 @@ app.processChatInput = async function() {
     history.appendChild(uMsg);
     input.value = '';
 
-    // CALL SERVER FOR SMART ENTRY
-    const result = await DataAPI.smartEntry(text);
+    // --- NEW: CHECK BACKEND STATUS (Smart Entry) ---
+    let useSmartEntry = false;
+    try {
+        // PING the new Smart Entry endpoint to see if it's live
+        const response = await fetch(`${API_URL}/smart-entry`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${DataAPI.getToken()}` }
+        });
 
-    if (result && result.success && result.transaction) {
-        // Server returned fully calculated transaction
-        const tx = result.transaction;
-
-        // Show Confirmation
-        app.renderConfirmationCard(tx);
-    } else {
-        showToast('Failed to process entry', 'error');
+        if (response.ok) {
+            useSmartEntry = true; // Backend is up, use the Smart Engine
+            console.log("Smart Engine Online. Using AI Accounting...");
+        } else {
+            useSmartEntry = false; // Backend is down or 404, use Manual Math
+            console.warn("Smart Engine Offline. Using Standard Entry.");
+        }
+    } catch (e) {
+        console.warn("Network check failed. Assuming standard entry.");
+        useSmartEntry = false;
     }
-}
+
+    // --- EXECUTION (WITH FALLBACK) ---
+    setTimeout(async () => {
+        const parsed = NLP.parse(text);
+        if(parsed.amount === 0) { showToast('No amount', 'error'); return; }
+        
+        if (useSmartEntry) {
+            // 1. Use Smart Backend
+            const result = await DataAPI.smartEntry(text);
+            if (result && result.success) {
+                const tx = result.transaction;
+                app.renderConfirmationCard(tx); // Smart Backend returns full transaction object with calculated entries
+            } else {
+                showToast('Smart Entry Error', 'error');
+            }
+        } else {
+            // 2. Use Standard Logic (Frontend calculates entries)
+            // This ensures you never see "Failing to Process Entry" if backend is down
+            State.pendingTx = { ...parsed, netAmount: parsed.amount };
+            app.renderConfirmationCard(State.pendingTx); // Renders card with local calculation
+        }
+    }, 500);
+};
 app.renderConfirmationCard = function(tx) {
     const container = document.getElementById('confirm-container');
     
@@ -1159,4 +1191,5 @@ app.init();
 </script>
 </body>
 </html>
+
 

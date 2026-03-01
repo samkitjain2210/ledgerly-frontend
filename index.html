@@ -1004,59 +1004,126 @@ const app = {
         return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num || 0);
     },
 
-    getBalances() {
-        let ledger = {};
+    // ── STEP 1: Build raw ledger from all confirmed transactions ──
+    buildLedger() {
+        const ledger = {};
+        // Seed every COA account at zero so reports always show them
+        Object.entries(COA).forEach(([type, accounts]) => {
+            accounts.forEach(acc => { ledger[acc] = { dr: 0, cr: 0, type }; });
+        });
         State.biz.transactions.forEach(tx => {
             if (tx.status !== 'confirmed') return;
-            if (!tx.entries || !Array.isArray(tx.entries)) return;
+            if (!Array.isArray(tx.entries))  return;
             tx.entries.forEach(e => {
-                if (!ledger[e.account]) ledger[e.account] = { dr: 0, cr: 0, type: 'unknown' };
+                if (!e.account) return;
+                if (!ledger[e.account]) {
+                    // unknown account — infer type
+                    let t = 'unknown';
+                    for (const [type, accs] of Object.entries(COA)) {
+                        if (accs.includes(e.account)) { t = type; break; }
+                    }
+                    ledger[e.account] = { dr: 0, cr: 0, type: t };
+                }
                 ledger[e.account].dr += (e.dr || 0);
                 ledger[e.account].cr += (e.cr || 0);
             });
         });
-        Object.keys(COA).forEach(type => {
-            COA[type].forEach(acc => { if (ledger[acc]) ledger[acc].type = type; });
+        return ledger;
+    },
+
+    // ── STEP 2: Get signed balance using normal-balance rules ──
+    // Asset/Expense  → debit-normal  → balance = Dr - Cr
+    // Income/Liability/Equity → credit-normal → balance = Cr - Dr
+    accountBalance(entry) {
+        const { dr, cr, type } = entry;
+        if (type === 'Asset' || type === 'Expense') return dr - cr;
+        return cr - dr;
+    },
+
+    // ── STEP 3: Full getBalances ──
+    getBalances() {
+        const ledger = this.buildLedger();
+
+        // ── P&L ──────────────────────────────
+        const incomeBreakdown  = {};
+        const expenseBreakdown = {};
+
+        COA.Income.forEach(acc => {
+            const bal = this.accountBalance(ledger[acc]);
+            if (bal !== 0) incomeBreakdown[acc] = bal;
+        });
+        COA.Expense.forEach(acc => {
+            const bal = this.accountBalance(ledger[acc]);
+            if (bal !== 0) expenseBreakdown[acc] = bal;
         });
 
-        let cash = 0, bank = 0, income = 0, expense = 0, assets = 0, liabilities = 0, capital = 0;
-        let operating = 0, investing = 0, financing = 0;
+        const totalIncome  = Object.values(incomeBreakdown).reduce((s, v) => s + v, 0);
+        const totalExpense = Object.values(expenseBreakdown).reduce((s, v) => s + v, 0);
+        const netProfit    = totalIncome - totalExpense;
 
-        for (const [acc, vals] of Object.entries(ledger)) {
-            const net = Math.abs(vals.dr - vals.cr);
-            if (vals.type === 'Asset') {
-                if (acc === 'Cash') cash += net;
-                else if (acc === 'Bank') bank += net;
-                else assets += net;
-            } else if (vals.type === 'Expense')   expense    += net;
-            else if (vals.type === 'Income')      income     += net;
-            else if (vals.type === 'Liability')   liabilities += net;
-            else if (vals.type === 'Equity')      capital    += net;
-        }
+        // ── BALANCE SHEET — ASSETS ────────────
+        const cash = this.accountBalance(ledger['Cash']);
+        const bank = this.accountBalance(ledger['Bank']);
 
+        const assetBreakdown = {};
+        COA.Asset.filter(a => a !== 'Cash' && a !== 'Bank').forEach(acc => {
+            const bal = this.accountBalance(ledger[acc]);
+            if (bal !== 0) assetBreakdown[acc] = bal;
+        });
+        const totalOtherAssets = Object.values(assetBreakdown).reduce((s, v) => s + v, 0);
+        const totalAssets      = cash + bank + totalOtherAssets;
+
+        // ── BALANCE SHEET — LIABILITIES ───────
+        const liabilityBreakdown = {};
+        COA.Liability.forEach(acc => {
+            const bal = this.accountBalance(ledger[acc]);
+            if (bal !== 0) liabilityBreakdown[acc] = bal;
+        });
+        const totalLiabilities = Object.values(liabilityBreakdown).reduce((s, v) => s + v, 0);
+
+        // ── BALANCE SHEET — EQUITY ────────────
+        const capital          = this.accountBalance(ledger['Capital']);
+        const retainedEarnings = netProfit;
+        const totalEquity      = capital + retainedEarnings;
+        const totalLiabEquity  = totalLiabilities + totalEquity;
+
+        // ── CASH FLOW ─────────────────────────
+        // Look at actual Cash/Bank entry movements, not inferred from accountType
+        let operatingCash = 0, investingCash = 0, financingCash = 0;
         State.biz.transactions.forEach(tx => {
-            if (tx.status !== 'confirmed' || !tx.entries) return;
+            if (tx.status !== 'confirmed' || !Array.isArray(tx.entries)) return;
             tx.entries.forEach(e => {
-                if (e.account === 'Cash' || e.account === 'Bank') {
-                    const flow = (e.dr || 0) - (e.cr || 0);
-                    if      (tx.accountType === 'Income' || tx.accountType === 'Expense') operating += flow;
-                    else if (tx.accountType === 'Asset')                                  investing += flow;
-                    else if (tx.accountType === 'Liability' || tx.accountType === 'Equity') financing += flow;
-                }
+                if (e.account !== 'Cash' && e.account !== 'Bank') return;
+                const flow = (e.dr || 0) - (e.cr || 0); // + = cash in, - = cash out
+                const type = tx.accountType;
+                if      (type === 'Income'   || type === 'Expense')  operatingCash += flow;
+                else if (type === 'Asset')                            investingCash += flow;
+                else if (type === 'Liability' || type === 'Equity')  financingCash += flow;
             });
         });
+        const netCashChange = operatingCash + investingCash + financingCash;
 
-        const netProfit     = income - expense;
-        const totalEquity   = capital + netProfit;
-        return { cash, bank, income, expense, assets, liabilities, capital, netProfit, totalEquity, operating, investing, financing };
+        return {
+            // Dashboard
+            cash, bank, totalAssets, netProfit,
+            // P&L detail
+            totalIncome, totalExpense, incomeBreakdown, expenseBreakdown,
+            // Balance sheet
+            assetBreakdown, totalOtherAssets,
+            liabilityBreakdown, totalLiabilities,
+            capital, retainedEarnings, totalEquity, totalLiabEquity,
+            // Cash flow
+            operatingCash, investingCash, financingCash, netCashChange
+        };
     },
 
     renderDashboard() {
         const b = this.getBalances();
+
         document.getElementById('dash-liquid').innerText = this.formatCurrency(b.cash + b.bank);
-        document.getElementById('dash-assets').innerText = this.formatCurrency(b.assets + b.cash + b.bank);
+        document.getElementById('dash-assets').innerText = this.formatCurrency(b.totalAssets);
         const profitEl = document.getElementById('dash-profit');
-        profitEl.innerText = this.formatCurrency(b.netProfit);
+        profitEl.innerText   = this.formatCurrency(b.netProfit);
         profitEl.style.color = b.netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
 
         const tbody  = document.getElementById('dash-tx-body');
@@ -1075,27 +1142,35 @@ const app = {
             table.style.display = '';
 
             txList.forEach(t => {
-                // FIX #8: store tx in TxStore, only pass id to onclick
                 TxStore.set(t.id, t);
-
-                const isLocked = this.isTxLocked(t);
-                const gstBadge = t.gstRate > 0
+                const isLocked    = this.isTxLocked(t);
+                const gstBadge    = t.gstRate > 0
                     ? `<span class="badge" style="background:#dcfce7;color:#166534;">${t.gstRate}%</span>`
                     : '<span style="color:#ccc;">—</span>';
-
                 const statusClass = t.status === 'confirmed' ? 'confirmed' : 'draft';
+
+                // Income/Liability/Equity = money coming IN = green +
+                // Expense/Asset = money going OUT = red -
+                const isInflow  = ['Income','Liability','Equity'].includes(t.accountType);
+                const amtColor  = isInflow ? 'var(--success)' : 'var(--danger)';
+                const amtSign   = isInflow ? '+' : '-';
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${t.date || '—'}</td>
-                    <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${t.desc || ''}">${t.desc || '—'}</td>
+                    <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${t.desc || ''}">${t.desc || '—'}</td>
                     <td>${t.category || '—'}</td>
                     <td>${gstBadge}</td>
-                    <td style="font-weight:600;">${this.formatCurrency(t.netAmount)}</td>
+                    <td style="font-weight:600;color:${amtColor};">${amtSign}${this.formatCurrency(t.netAmount)}</td>
                     <td><span class="badge ${statusClass}">${t.status}</span></td>
-                    <td style="display:flex; gap:4px; flex-wrap:wrap;">
-                        ${t.status !== 'confirmed' ? `<button class="btn btn-sm btn-success" onclick="app.confirmTx(${t.id})">✓</button>` : ''}
+                    <td style="display:flex;gap:4px;flex-wrap:wrap;">
+                        ${t.status !== 'confirmed'
+                            ? `<button class="btn btn-sm btn-success" onclick="app.confirmTx(${t.id})">✓</button>`
+                            : ''}
                         <button class="btn btn-sm btn-outline" onclick="app.openEditById(${t.id})">Edit</button>
-                        ${!isLocked ? `<button class="btn btn-sm btn-danger" onclick="app.deleteTx(${t.id})">Del</button>` : ''}
+                        ${!isLocked
+                            ? `<button class="btn btn-sm btn-danger" onclick="app.deleteTx(${t.id})">Del</button>`
+                            : ''}
                     </td>`;
                 tbody.appendChild(tr);
             });
@@ -1370,57 +1445,147 @@ const app = {
     },
 
     renderReports() {
-        const b = this.getBalances();
-        const totalAssets = b.cash + b.bank + b.assets;
-        const totalEqLiab = b.liabilities + b.totalEquity;
-        const balanced    = Math.abs(totalAssets - totalEqLiab) < 1;
-        const fmt         = (n) => this.formatCurrency(n);
+        const b   = this.getBalances();
+        const fmt = (n) => this.formatCurrency(n);
 
-        const row = (label, amount, bold, color) =>
-            `<div style="display:flex; justify-content:space-between; padding:4px 0; ${bold ? 'font-weight:700; border-top:1px solid #eee; margin-top:4px;' : ''} ${color ? 'color:' + color + ';' : ''}">
+        // ── Helpers ───────────────────────────
+        const secHeader = (label) => `
+            <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;
+                text-transform:uppercase;color:var(--text-muted);
+                padding:14px 0 5px;border-bottom:2px solid var(--border);
+                margin-bottom:4px;">${label}</div>`;
+
+        const row = (label, amount, { bold=false, color=null, indent=false, topLine=false } = {}) => `
+            <div style="display:flex;justify-content:space-between;padding:${bold?'8px':'3px'} 0;
+                ${indent     ? 'padding-left:1.4rem;color:var(--text-muted);font-size:0.88rem;' : ''}
+                ${bold       ? 'font-weight:700;'          : ''}
+                ${topLine    ? 'border-top:2px solid var(--border);margin-top:10px;padding-top:10px;' : ''}
+                ${color      ? `color:${color};`           : ''}">
                 <span>${label}</span><span>${fmt(amount)}</span>
             </div>`;
 
+        const noData = `<div style="color:var(--text-muted);font-size:0.85rem;
+            padding:4px 0 4px 1.4rem;">None recorded yet</div>`;
+
+        // ── P&L ──────────────────────────────────────
         if (this.reportView === 'pl') {
-            document.getElementById('report-title').innerText = '📊 Profit & Loss Statement';
-            document.getElementById('report-display').innerHTML = `
-                <div style="font-weight:700; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">INCOME</div>
-                ${row('Total Revenue', b.income)}
-                <div style="font-weight:700; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; margin:12px 0 4px;">EXPENSES</div>
-                ${row('Total Expenses', b.expense)}
-                ${row('Net Profit / Loss', b.netProfit, true, b.netProfit >= 0 ? 'var(--success)' : 'var(--danger)')}`;
+            document.getElementById('report-title').innerText = 'Profit & Loss Statement';
 
+            const incomeRows  = Object.keys(b.incomeBreakdown).length
+                ? Object.entries(b.incomeBreakdown).map(([a,v]) => row(a, v, { indent:true })).join('')
+                : noData;
+
+            const expenseRows = Object.keys(b.expenseBreakdown).length
+                ? Object.entries(b.expenseBreakdown).map(([a,v]) => row(a, v, { indent:true })).join('')
+                : noData;
+
+            const profitColor = b.netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+            const profitLabel = b.netProfit >= 0 ? '📈 Net Profit' : '📉 Net Loss';
+
+            document.getElementById('report-display').innerHTML = `
+                ${secHeader('Income')}
+                ${incomeRows}
+                ${row('Total Income', b.totalIncome, { bold:true })}
+
+                ${secHeader('Expenses')}
+                ${expenseRows}
+                ${row('Total Expenses', b.totalExpense, { bold:true })}
+
+                ${row(profitLabel, Math.abs(b.netProfit), { bold:true, topLine:true, color:profitColor })}
+            `;
+
+        // ── BALANCE SHEET ─────────────────────────────
         } else if (this.reportView === 'bs') {
-            document.getElementById('report-title').innerText = '🏦 Balance Sheet';
-            document.getElementById('report-display').innerHTML = `
-                <div style="font-weight:700; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; margin-bottom:4px;">ASSETS</div>
-                ${row('Cash', b.cash)}
-                ${row('Bank', b.bank)}
-                ${row('Fixed Assets', b.assets)}
-                ${row('Total Assets', totalAssets, true)}
-                <div style="height:16px;"></div>
-                <div style="font-weight:700; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; margin-bottom:4px;">EQUITY & LIABILITIES</div>
-                ${row('Total Liabilities', b.liabilities)}
-                ${row("Owner's Capital", b.capital)}
-                ${row('Retained Earnings', b.netProfit)}
-                ${row('Total Equity + Liabilities', totalEqLiab, true)}
-                <div style="margin-top:12px; padding:8px; background:${balanced ? '#dcfce7' : '#fee2e2'}; text-align:center; font-weight:700; border-radius:6px;">
-                    ${balanced ? '✅ BALANCED' : '❌ UNBALANCED — check your entries'}
-                </div>`;
+            document.getElementById('report-title').innerText = 'Balance Sheet';
 
-        } else if (this.reportView === 'cf') {
-            const netCash = b.operating + b.investing + b.financing;
-            document.getElementById('report-title').innerText = '💸 Cash Flow Statement';
+            const assetRows = [
+                row('Cash', b.cash,   { indent:true }),
+                row('Bank', b.bank,   { indent:true }),
+                ...Object.entries(b.assetBreakdown).map(([a,v]) => row(a, v, { indent:true }))
+            ].join('');
+
+            const liabRows = Object.keys(b.liabilityBreakdown).length
+                ? Object.entries(b.liabilityBreakdown).map(([a,v]) => row(a, v, { indent:true })).join('')
+                : noData;
+
+            const balanced   = Math.abs(b.totalAssets - b.totalLiabEquity) < 1;
+            const retColor   = b.retainedEarnings >= 0 ? 'var(--success)' : 'var(--danger)';
+
             document.getElementById('report-display').innerHTML = `
-                <div style="font-weight:700; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; margin-bottom:4px;">OPERATING ACTIVITIES</div>
-                ${row('Net Cash from Operations', b.operating, false, b.operating >= 0 ? 'var(--success)' : 'var(--danger)')}
-                <div style="height:12px;"></div>
-                <div style="font-weight:700; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; margin-bottom:4px;">INVESTING ACTIVITIES</div>
-                ${row('Net Cash from Investing', b.investing, false, b.investing >= 0 ? 'var(--success)' : 'var(--danger)')}
-                <div style="height:12px;"></div>
-                <div style="font-weight:700; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; margin-bottom:4px;">FINANCING ACTIVITIES</div>
-                ${row('Net Cash from Financing', b.financing, false, b.financing >= 0 ? 'var(--success)' : 'var(--danger)')}
-                ${row('Net Change in Cash', netCash, true, netCash >= 0 ? 'var(--success)' : 'var(--danger)')}`;
+                ${secHeader('Assets')}
+                ${assetRows}
+                ${row('Total Assets', b.totalAssets, { bold:true })}
+
+                ${secHeader('Liabilities')}
+                ${liabRows}
+                ${row('Total Liabilities', b.totalLiabilities, { bold:true })}
+
+                ${secHeader("Owner's Equity")}
+                ${row('Capital Invested',          b.capital,          { indent:true })}
+                ${row('Retained Earnings (P&L)',   b.retainedEarnings, { indent:true, color:retColor })}
+                ${row('Total Equity',              b.totalEquity,      { bold:true })}
+
+                ${row('Total Liabilities + Equity', b.totalLiabEquity, { bold:true, topLine:true })}
+
+                <div style="margin-top:14px;padding:10px 14px;text-align:center;font-weight:700;
+                    border-radius:6px;font-size:0.95rem;
+                    background:${balanced ? '#dcfce7' : '#fee2e2'};
+                    color:${balanced ? '#166534' : '#dc2626'};">
+                    ${balanced
+                        ? '✅ Balance Sheet is BALANCED'
+                        : `❌ UNBALANCED — gap: ${fmt(Math.abs(b.totalAssets - b.totalLiabEquity))}`}
+                </div>
+            `;
+
+        // ── CASH FLOW ─────────────────────────────────
+        } else if (this.reportView === 'cf') {
+            document.getElementById('report-title').innerText = 'Cash Flow Statement';
+
+            const cfRow = (label, amount) => {
+                const c = amount >= 0 ? 'var(--success)' : 'var(--danger)';
+                const s = amount >= 0 ? '+' : '';
+                return `<div style="display:flex;justify-content:space-between;
+                    padding:3px 0 3px 1.4rem;color:var(--text-muted);font-size:0.88rem;">
+                    <span>${label}</span>
+                    <span style="color:${c};font-weight:500;">${s}${fmt(amount)}</span>
+                </div>`;
+            };
+
+            const netColor = b.netCashChange >= 0 ? 'var(--success)' : 'var(--danger)';
+            const netLabel = b.netCashChange >= 0 ? '📈 Net Increase in Cash' : '📉 Net Decrease in Cash';
+
+            document.getElementById('report-display').innerHTML = `
+                ${secHeader('Operating Activities')}
+                <div style="color:var(--text-muted);font-size:0.78rem;padding:2px 0 4px 1.4rem;">
+                    Day-to-day income &amp; expenses
+                </div>
+                ${cfRow('Net Cash from Operations', b.operatingCash)}
+                ${row('Subtotal', b.operatingCash, { bold:true, color: b.operatingCash >= 0 ? 'var(--success)':'var(--danger)' })}
+
+                ${secHeader('Investing Activities')}
+                <div style="color:var(--text-muted);font-size:0.78rem;padding:2px 0 4px 1.4rem;">
+                    Buying or selling assets (equipment, etc.)
+                </div>
+                ${cfRow('Net Cash from Investing', b.investingCash)}
+                ${row('Subtotal', b.investingCash, { bold:true, color: b.investingCash >= 0 ? 'var(--success)':'var(--danger)' })}
+
+                ${secHeader('Financing Activities')}
+                <div style="color:var(--text-muted);font-size:0.78rem;padding:2px 0 4px 1.4rem;">
+                    Loans taken, capital invested, owner contributions
+                </div>
+                ${cfRow('Net Cash from Financing', b.financingCash)}
+                ${row('Subtotal', b.financingCash, { bold:true, color: b.financingCash >= 0 ? 'var(--success)':'var(--danger)' })}
+
+                ${row(netLabel, Math.abs(b.netCashChange), { bold:true, topLine:true, color:netColor })}
+
+                <div style="margin-top:12px;padding:10px 14px;
+                    background:#f8fafc;border:1px solid var(--border);
+                    border-radius:6px;display:flex;justify-content:space-between;
+                    font-size:0.88rem;">
+                    <span style="color:var(--text-muted);">Closing Cash &amp; Bank Balance</span>
+                    <span style="font-weight:700;">${fmt(b.cash + b.bank)}</span>
+                </div>
+            `;
         }
     },
 

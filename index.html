@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ledgerly.ai | Production Candidate v4.3 (Smart Engine)</title>
+<title>Ledgerly.ai | v4.4</title>
 <style>
 :root {
     --primary: #2563eb;
@@ -18,8 +18,6 @@
     --text-main: #0f172a;
     --text-muted: #64748b;
     --border: #e2e8f0;
-    --sidebar-width: 260px;
-    --header-height: 64px;
     --radius: 8px;
     --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
 }
@@ -33,7 +31,6 @@ body {
     display: flex;
     overflow: hidden;
 }
-/* --- Layout --- */
 .sidebar {
     width: 260px;
     background: #0f172a;
@@ -49,7 +46,6 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    position: relative;
 }
 header {
     height: 64px;
@@ -65,9 +61,7 @@ header {
     flex: 1;
     overflow-y: auto;
     padding: 2rem;
-    position: relative;
 }
-/* --- Components --- */
 .brand {
     font-size: 1.25rem;
     font-weight: 700;
@@ -110,7 +104,6 @@ header {
     gap: 1.5rem;
     margin-bottom: 1.5rem;
 }
-/* --- Badges & Status --- */
 .badge {
     font-size: 0.7rem;
     padding: 2px 6px;
@@ -121,7 +114,8 @@ header {
 .badge.owner { background: #4338ca; color: white; }
 .badge.viewer { background: #a1a1aa; color: white; }
 .badge.locked { background: #ef4444; color: white; }
-/* --- Tables --- */
+.badge.draft { background: #fef3c7; color: #92400e; }
+.badge.confirmed { background: #dcfce7; color: #166534; }
 table { width: 100%; border-collapse: collapse; }
 th {
     text-align: left;
@@ -138,7 +132,6 @@ td {
     font-size: 0.9rem;
     vertical-align: middle;
 }
-/* --- Chat & Explainability --- */
 .chat-container {
     max-width: 800px;
     margin: 0 auto;
@@ -160,18 +153,21 @@ td {
     padding: 0.8rem 1rem;
     border-radius: 8px;
     font-size: 0.9rem;
-    line-height: 1.4;
+    line-height: 1.5;
 }
 .msg.ai { background: white; border: 1px solid var(--border); align-self: flex-start; }
 .msg.user { background: var(--primary); color: white; align-self: flex-end; }
+.msg.error { background: #fef2f2; border: 1px solid #fee2e2; color: #dc2626; align-self: flex-start; }
 .mini-ledger {
     width: 100%;
     margin-top: 10px;
     font-family: monospace;
     font-size: 0.85rem;
     border: 1px solid #eee;
+    border-radius: 4px;
+    overflow: hidden;
 }
-.mini-ledger td { padding: 4px; border-bottom: 1px solid #f0f0f0; }
+.mini-ledger td { padding: 4px 8px; border-bottom: 1px solid #f0f0f0; }
 .mini-ledger .dr { color: #166534; font-weight: bold; }
 .mini-ledger .cr { color: #dc2626; font-weight: bold; }
 .confirm-card {
@@ -183,6 +179,7 @@ td {
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+    margin: 0.5rem auto;
 }
 .confirm-header {
     background: #eff6ff;
@@ -193,12 +190,13 @@ td {
     border-bottom: 1px solid #dbeafe;
     display: flex;
     justify-content: space-between;
+    align-items: center;
 }
 .confirm-body { padding: 15px; }
 .confirm-row {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     font-size: 0.9rem;
     align-items: center;
 }
@@ -212,6 +210,7 @@ td {
     align-items: center;
     margin-top: 1rem;
 }
+.chat-input-area input { flex: 1; }
 input, select {
     padding: 0.6rem;
     border: 1px solid var(--border);
@@ -229,18 +228,19 @@ input, select {
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    white-space: nowrap;
 }
 .btn-primary { background: var(--primary); color: white; }
+.btn-primary:hover { background: var(--primary-dark); }
 .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-main); }
+.btn-outline:hover { background: #f8fafc; }
 .btn-danger { background: #fef2f2; color: var(--danger); border: 1px solid #fee2e2; }
+.btn-success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-/* --- Modals & Toasts --- */
+.btn-sm { padding: 0.25rem 0.6rem; font-size: 0.75rem; }
 .modal-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    inset: 0;
     background: rgba(0,0,0,0.5);
     display: flex;
     align-items: center;
@@ -248,7 +248,7 @@ input, select {
     z-index: 100;
     opacity: 0;
     pointer-events: none;
-    transition: 0.2s;
+    transition: opacity 0.2s;
 }
 .modal-overlay.active { opacity: 1; pointer-events: all; }
 .modal {
@@ -285,18 +285,17 @@ input, select {
 }
 .toast.warning { border-left-color: var(--warning); }
 .toast.error { border-left-color: var(--danger); }
+.toast.success { border-left-color: var(--success); }
 @keyframes slideIn {
     from { transform: translateX(100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
 }
-/* --- Utilities --- */
 .hidden { display: none !important; }
 .view-section { display: none; }
 .view-section.active { display: block; }
-/* Server Status Indicator */
 .server-status {
     font-size: 0.75rem;
-    padding: 4px 8px;
+    padding: 4px 10px;
     border-radius: 12px;
     background: #f1f5f9;
     color: #64748b;
@@ -307,8 +306,7 @@ input, select {
 .server-status::before {
     content: '';
     display: block;
-    width: 8px;
-    height: 8px;
+    width: 8px; height: 8px;
     border-radius: 50%;
     background: #cbd5e1;
 }
@@ -316,11 +314,40 @@ input, select {
 .server-status.online::before { background: #22c55e; box-shadow: 0 0 0 2px #86efac; }
 .server-status.syncing { background: #eff6ff; color: #1d4ed8; }
 .server-status.syncing::before { background: #3b82f6; animation: pulse 1s infinite; }
-
+.server-status.offline { background: #fef2f2; color: #dc2626; }
+.server-status.offline::before { background: #ef4444; }
 @keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.4; }
-    100% { opacity: 1; }
+    0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
+}
+/* Loading spinner */
+.spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+/* Empty state */
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+}
+.empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
+/* Month-end lock banner */
+.lock-banner {
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 0.82rem;
+    color: #78350f;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 @media print {
     .sidebar, header, .btn, .chat-input-area, .toast-container { display: none !important; }
@@ -330,245 +357,376 @@ input, select {
 </style>
 </head>
 <body>
-<!-- COA DEFINITION (CONSTANT) -->
+
+<!-- COA DEFINITION -->
 <script>
 const COA = {
-    Asset: ['Cash', 'Bank', 'Equipment', 'Input Tax Credit', 'Receivables'],
+    Asset:     ['Cash', 'Bank', 'Equipment', 'Input Tax Credit', 'Receivables'],
     Liability: ['Term Loan', 'GST Payable', 'Vendor Payables'],
-    Income: ['Sales', 'Service Income', 'Refunds'], 
-    Expense: ['Rent', 'Salary', 'Utilities', 'Office Supplies', 'Professional Fees'],
-    Equity: ['Capital']
+    Income:    ['Sales', 'Service Income', 'Refunds'],
+    Expense:   ['Rent', 'Salary', 'Utilities', 'Office Supplies', 'Professional Fees'],
+    Equity:    ['Capital']
+};
+
+// ─────────────────────────────────────────────
+// FIX #1: NLP PARSER — was referenced but NEVER defined
+// Simple keyword-based parser so Smart Entry works offline too
+// ─────────────────────────────────────────────
+const NLP = {
+    parse(text) {
+        const lower = text.toLowerCase();
+
+        // Extract amount — handles "5000", "₹5,000", "5k"
+        let amount = 0;
+        const amtMatch = text.match(/(?:₹\s*)?(\d[\d,]*(?:\.\d{1,2})?)\s*k?/i);
+        if (amtMatch) {
+            amount = parseFloat(amtMatch[1].replace(/,/g, ''));
+            if (/\bk\b/i.test(text)) amount *= 1000;
+        }
+
+        // Extract date (dd/mm/yyyy or dd-mm-yyyy or "today")
+        let date = new Date().toISOString().split('T')[0];
+        const dateMatch = text.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+        if (dateMatch) {
+            const y = dateMatch[3] ? (dateMatch[3].length === 2 ? '20' + dateMatch[3] : dateMatch[3]) : new Date().getFullYear();
+            date = `${y}-${String(dateMatch[2]).padStart(2, '0')}-${String(dateMatch[1]).padStart(2, '0')}`;
+        }
+
+        // Detect GST rate
+        let gstRate = 0;
+        if (/18\s*%?\s*gst|gst\s*18/.test(lower)) gstRate = 18;
+        else if (/12\s*%?\s*gst|gst\s*12/.test(lower)) gstRate = 12;
+        else if (/28\s*%?\s*gst|gst\s*28/.test(lower)) gstRate = 28;
+        else if (/5\s*%?\s*gst|gst\s*5/.test(lower)) gstRate = 5;
+
+        const isInclusiveGST = /incl|inclusive|inc\.?\s*tax|with\s*gst/.test(lower);
+
+        // Detect payment mode
+        let mode = 'Cash';
+        if (/\bupi\b|gpay|phonepe|paytm/.test(lower)) mode = 'UPI';
+        else if (/\bbank\b|\bneft\b|\brtgs\b|\bcheque\b|\bimps\b/.test(lower)) mode = 'Bank';
+
+        // Detect account type & category
+        let accountType = 'Expense';
+        let category = 'Office Supplies';
+
+        const expenseMap = [
+            { keys: ['rent', 'office rent', 'shop rent'], cat: 'Rent', type: 'Expense' },
+            { keys: ['salary', 'salaries', 'wages', 'staff pay'], cat: 'Salary', type: 'Expense' },
+            { keys: ['electric', 'electricity', 'internet', 'wifi', 'phone bill', 'utility', 'utilities'], cat: 'Utilities', type: 'Expense' },
+            { keys: ['professional fee', 'consultant', 'lawyer', 'ca fee', 'audit'], cat: 'Professional Fees', type: 'Expense' },
+            { keys: ['office supply', 'stationery', 'supplies', 'printing'], cat: 'Office Supplies', type: 'Expense' },
+            { keys: ['sales', 'sold', 'revenue', 'invoice raised', 'received payment'], cat: 'Sales', type: 'Income' },
+            { keys: ['service income', 'service charge', 'service fee', 'project income'], cat: 'Service Income', type: 'Income' },
+            { keys: ['refund received', 'refunded'], cat: 'Refunds', type: 'Income' },
+            { keys: ['equipment', 'laptop', 'computer', 'machine', 'furniture', 'ac ', 'printer'], cat: 'Equipment', type: 'Asset' },
+            { keys: ['loan', 'borrowed', 'term loan'], cat: 'Term Loan', type: 'Liability' },
+            { keys: ['capital', 'invested', 'owner contribution'], cat: 'Capital', type: 'Equity' },
+        ];
+
+        for (const rule of expenseMap) {
+            if (rule.keys.some(k => lower.includes(k))) {
+                category = rule.cat;
+                accountType = rule.type;
+                break;
+            }
+        }
+
+        // Build description from text (clean up amount/date noise)
+        const desc = text.replace(/(?:₹\s*)?\d[\d,]*(?:\.\d{1,2})?\s*k?/i, '').replace(/\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?/, '').trim() || text.trim();
+
+        return { amount, date, desc, gstRate, isInclusiveGST, mode, accountType, category };
+    }
 };
 </script>
-<!-- DATALIST FOR UI -->
+
 <datalist id="category-suggestions"></datalist>
+
 <!-- SIDEBAR -->
-<nav class="sidebar">
-<div class="brand">
-    <span style="font-size:1.5rem;">📓</span>
-    <span>Ledgerly.ai</span>
-    <span style="font-size:0.6rem; background:var(--success); padding:2px 4px; border-radius:4px;">v4.3</span>
-</div>
-<button class="nav-btn active" onclick="app.navigate('dashboard')">📊 Dashboard</button>
-<button class="nav-btn" onclick="app.navigate('input')">🎙️ Smart Entry</button>
-<button class="nav-btn" onclick="app.navigate('upload')">📄 Bank Import</button>
-<button class="nav-btn" onclick="app.navigate('reports')">📈 Reports</button>
-<div style="margin-top:auto; border-top:1px solid #334155; padding-top:1rem;">
-    <div style="font-size:0.75rem; color:#94a3b8; margin-bottom:5px;">ROLE / BUSINESS</div>
-    <div style="display:flex; gap:5px; margin-bottom:10px;">
-        <button class="btn btn-outline" style="flex:1; padding:4px; font-size:0.7rem;" onclick="app.switchRole('owner')">Owner</button>
-        <button class="btn btn-outline" style="flex:1; padding:4px; font-size:0.7rem;" onclick="app.switchRole('viewer')">Viewer</button>
+<nav class="sidebar" id="app-sidebar">
+    <div class="brand">
+        <span style="font-size:1.5rem;">📓</span>
+        <span>Ledgerly.ai</span>
+        <span style="font-size:0.6rem; background:var(--success); padding:2px 5px; border-radius:4px; color:white;">v4.4</span>
     </div>
-    <div class="user-mini" style="display:flex; justify-content:space-between; align-items:center;">
-        <div style="display:flex; align-items:center; gap:10px;">
-            <div id="user-avatar" style="width:32px; height:32px; background:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold;">JD</div>
-            <div style="font-size:0.85rem;">John Doe</div>
+
+    <button class="nav-btn active" onclick="app.navigate('dashboard')">📊 Dashboard</button>
+    <button class="nav-btn" onclick="app.navigate('input')">🎙️ Smart Entry</button>
+    <button class="nav-btn" onclick="app.navigate('upload')">📄 Bank Import</button>
+    <button class="nav-btn" onclick="app.navigate('reports')">📈 Reports</button>
+
+    <div style="margin-top:auto; border-top:1px solid #334155; padding-top:1rem;">
+        <div style="font-size:0.75rem; color:#94a3b8; margin-bottom:6px; letter-spacing:0.05em;">ROLE</div>
+        <div style="display:flex; gap:8px; margin-bottom:12px;">
+            <!-- FIX #4: switchRole was called but never defined — now defined in app -->
+            <button class="btn btn-outline" style="flex:1; padding:4px; font-size:0.7rem;" onclick="app.switchRole('owner')">Owner</button>
+            <button class="btn btn-outline" style="flex:1; padding:4px; font-size:0.7rem;" onclick="app.switchRole('viewer')">Viewer</button>
         </div>
-        <span id="current-role-badge" class="badge owner">Owner 👑</span>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:10px;">
+                <div id="user-avatar" style="width:32px; height:32px; background:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:0.8rem; color:white;">--</div>
+                <div style="font-size:0.85rem;" id="sidebar-username">Loading...</div>
+            </div>
+            <span id="current-role-badge" class="badge owner">Owner 👑</span>
+        </div>
+        <!-- FIX: logout button added -->
+        <button class="btn btn-outline" style="width:100%; margin-top:10px; font-size:0.78rem;" onclick="app.logout()">🚪 Logout</button>
     </div>
 </nav>
-<!-- MAIN WRAPPER -->
-<div class="main-wrapper">
-<header>
-    <div style="display:flex; gap:15px; align-items:center;">
-        <h2 style="margin:0; font-size: 1.2rem;" id="page-title">Dashboard</h2>
-    </div>
-    <div style="display:flex; gap:10px; align-items:center;">
-        <!-- SERVER STATUS INDICATOR -->
-        <div id="server-status" class="server-status" title="Connection to Render Backend">Offline</div>
-        
-        <select id="business-switcher" style="padding:0.5rem; border:1px solid var(--border); border-radius:6px;" onchange="app.switchBusiness(this.value)">
-            <option value="biz1">My General Store</option>
-            <option value="biz2">Freelance Web Dev</option>
-        </select>
-        <button class="btn btn-outline" onclick="app.runMonthEnd()">⚙️ Month End Lock</button>
-        <button class="btn btn-outline" onclick="window.print()">PDF</button>
-    </div>
-</header>
-<main class="content-area">
-    <!-- AUTH SECTION -->
-<section id="view-auth" class="view-section active" style="max-width:400px; margin: 50px auto;">
-    <div class="card">
-        <h2 style="text-align:center; margin-bottom:20px;">Ledgerly.ai Login</h2>
-        
-        <div style="display:flex; gap:10px; margin-bottom:20px;">
-            <button id="btn-auth-login" class="btn btn-primary" style="flex:1;" onclick="app.setAuthMode('login')">Login</button>
-            <button id="btn-auth-register" class="btn btn-outline" style="flex:1;" onclick="app.setAuthMode('register')">Register</button>
+
+<!-- MAIN -->
+<div class="main-wrapper" id="app-main">
+    <header id="app-header">
+        <div style="display:flex; gap:12px; align-items:center;">
+            <h2 style="margin:0; font-size:1.15rem;" id="page-title">Dashboard</h2>
+            <div id="month-lock-indicator" class="hidden" style="font-size:0.72rem; background:#fef3c7; color:#92400e; padding:2px 8px; border-radius:100px; border:1px solid #fcd34d;">🔒 Month Locked</div>
         </div>
-        
-        <div id="auth-form-container">
-            <input type="email" id="auth-email" placeholder="Email Address" style="width:100%; margin-bottom:10px;">
-            <input type="password" id="auth-password" placeholder="Password" style="width:100%; margin-bottom:10px;">
-            <input type="text" id="auth-name" placeholder="Full Name" style="width:100%; margin-bottom:10px;" class="hidden">
-            <button class="btn btn-primary" style="width:100%;" onclick="app.handleAuthSubmit()">Submit</button>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <div id="server-status" class="server-status" title="Backend Connection">Offline</div>
+            <!-- FIX #6: switchBusiness now routes to app.switchBusiness -->
+            <select id="business-switcher" onchange="app.switchBusiness(this.value)">
+                <option value="">Loading...</option>
+            </select>
+            <!-- FIX #5: runMonthEnd was called but never defined -->
+            <button class="btn btn-outline" onclick="app.runMonthEnd()">⚙️ Month End</button>
+            <button class="btn btn-outline" onclick="window.print()">🖨️ PDF</button>
         </div>
-        <p id="auth-message" style="color:red; font-size:0.8rem; margin-top:10px;"></p>
-    </div>
-</section>
-<!-- 1. DASHBOARD -->
-<section id="view-dashboard" class="view-section">
-    <div class="grid-3">
-        <div class="card">
-            <div style="color:var(--text-muted); font-size:0.8rem;">Cash & Bank</div>
-            <div class="stat-val" style="font-size:1.5rem; font-weight:700; margin-top:5px;" id="dash-liquid">₹0</div>
+    </header>
+
+    <main class="content-area">
+
+        <!-- AUTH -->
+        <section id="view-auth" class="view-section active" style="max-width:420px; margin:50px auto;">
+            <div class="card">
+                <div style="text-align:center; margin-bottom:1.5rem;">
+                    <div style="font-size:2.5rem; margin-bottom:0.5rem;">📓</div>
+                    <h2 style="margin:0; font-size:1.4rem;">Ledgerly.ai</h2>
+                    <p style="color:var(--text-muted); font-size:0.85rem; margin-top:4px;">AI-powered accounting for small business</p>
+                </div>
+                <div style="display:flex; gap:10px; margin-bottom:1.2rem;">
+                    <button id="btn-auth-login" class="btn btn-primary" style="flex:1;" onclick="app.setAuthMode('login')">Login</button>
+                    <button id="btn-auth-register" class="btn btn-outline" style="flex:1;" onclick="app.setAuthMode('register')">Register</button>
+                </div>
+                <input type="email" id="auth-email" placeholder="Email Address" style="width:100%; margin-bottom:10px;">
+                <input type="password" id="auth-password" placeholder="Password" style="width:100%; margin-bottom:10px;">
+                <input type="text" id="auth-name" placeholder="Full Name" style="width:100%; margin-bottom:10px;" class="hidden">
+                <button class="btn btn-primary" style="width:100%;" id="auth-submit-btn" onclick="app.handleAuthSubmit()">
+                    <span id="auth-btn-text">Login</span>
+                </button>
+                <p id="auth-message" style="font-size:0.82rem; margin-top:10px; text-align:center;"></p>
+            </div>
+        </section>
+
+        <!-- DASHBOARD -->
+        <section id="view-dashboard" class="view-section">
+            <div class="grid-3">
+                <div class="card" style="border-left:3px solid var(--success);">
+                    <div style="color:var(--text-muted); font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em;">Cash & Bank</div>
+                    <div style="font-size:1.6rem; font-weight:700; margin-top:6px;" id="dash-liquid">₹0</div>
+                </div>
+                <div class="card" style="border-left:3px solid var(--primary);">
+                    <div style="color:var(--text-muted); font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em;">Total Assets</div>
+                    <div style="font-size:1.6rem; font-weight:700; margin-top:6px;" id="dash-assets">₹0</div>
+                </div>
+                <div class="card" style="border-left:3px solid var(--warning);">
+                    <div style="color:var(--text-muted); font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em;">Net Profit (YTD)</div>
+                    <div style="font-size:1.6rem; font-weight:700; margin-top:6px;" id="dash-profit">₹0</div>
+                </div>
+            </div>
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                    <h3 style="margin:0;">Recent Transactions</h3>
+                    <button class="btn btn-sm btn-outline" onclick="app.navigate('input')">+ New Entry</button>
+                </div>
+                <div id="dash-empty" class="empty-state hidden">
+                    <div class="icon">📭</div>
+                    <p>No transactions yet. Use Smart Entry to add one!</p>
+                </div>
+                <table id="dash-table">
+                    <thead>
+                        <tr><th>Date</th><th>Description</th><th>Category</th><th>GST</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="dash-tx-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- SMART ENTRY -->
+        <section id="view-input" class="view-section">
+            <div class="chat-container">
+                <div class="chat-history" id="chat-history">
+                    <div class="msg ai">
+                        💡 <strong>Smart Entry Active</strong><br>
+                        Type naturally — for example:<br>
+                        <em>"Paid rent ₹12,000 via bank"</em> or <em>"Sales of 50,000 with 18% GST"</em>
+                    </div>
+                </div>
+                <div id="confirm-container"></div>
+                <div class="chat-input-area">
+                    <button class="btn btn-outline" onclick="app.startVoice()" title="Voice input">🎙️</button>
+                    <input type="text" id="chat-input" list="category-suggestions" placeholder="Type transaction... (e.g. paid rent 5000 cash)" onkeypress="if(event.key==='Enter') app.processChatInput()">
+                    <select style="width:120px;" id="voice-lang">
+                        <option value="en-IN">English</option>
+                        <option value="hi-IN">Hindi</option>
+                    </select>
+                    <button class="btn btn-primary" id="send-btn" onclick="app.processChatInput()">Send</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- BANK IMPORT -->
+        <section id="view-upload" class="view-section">
+            <div class="card" style="max-width:700px; margin:0 auto;">
+                <h2 style="margin:0 0 0.5rem;">Bank Statement Import</h2>
+                <p style="color:var(--text-muted); font-size:0.88rem; margin-bottom:1.2rem;">Upload CSV or PDF bank statement. The server will parse and categorize automatically.</p>
+                <div id="drop-zone" style="border:2px dashed var(--border); border-radius:8px; padding:3rem; text-align:center; background:#f8fafc; cursor:pointer; transition:0.2s;"
+                    onclick="document.getElementById('file-input').click()"
+                    ondragover="event.preventDefault(); this.style.borderColor='var(--primary)'"
+                    ondragleave="this.style.borderColor='var(--border)'"
+                    ondrop="event.preventDefault(); app.handleFileSelect({files: event.dataTransfer.files})">
+                    <div style="font-size:2.5rem; margin-bottom:10px;">📄</div>
+                    <p style="font-weight:600;">Click to upload or drag & drop</p>
+                    <p style="font-size:0.82rem; color:var(--text-muted);">CSV, PDF supported</p>
+                    <input type="file" id="file-input" hidden accept=".csv,.pdf" onchange="app.handleFileSelect(this)">
+                </div>
+                <div id="pending-imports-container" class="hidden" style="margin-top:1.5rem;">
+                    <h3 style="margin-bottom:0.8rem;">Review Transactions</h3>
+                    <table id="import-list">
+                        <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th></tr></thead>
+                        <tbody id="import-tbody"></tbody>
+                    </table>
+                    <div style="text-align:right; margin-top:1rem; display:flex; gap:10px; justify-content:flex-end;">
+                        <!-- FIX #3: cancelImport was called but never defined -->
+                        <button class="btn btn-danger" onclick="app.cancelImport()">Cancel</button>
+                        <button class="btn btn-primary" onclick="app.confirmImportBatch()">✅ Import All</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- REPORTS -->
+        <section id="view-reports" class="view-section">
+            <div style="display:flex; gap:10px; margin-bottom:1rem; flex-wrap:wrap;">
+                <button class="btn btn-primary" id="btn-pl" onclick="app.switchReport('pl')">📊 P&L Statement</button>
+                <button class="btn btn-outline" id="btn-bs" onclick="app.switchReport('bs')">🏦 Balance Sheet</button>
+                <button class="btn btn-outline" id="btn-cf" onclick="app.switchReport('cf')">💸 Cash Flow</button>
+            </div>
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                    <h3 style="margin:0;" id="report-title">Profit & Loss</h3>
+                    <button class="btn btn-sm btn-outline" onclick="window.print()">🖨️ Print</button>
+                </div>
+                <div id="report-display" style="line-height:2.2;"></div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal">
+    <div class="modal">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+            <h3 style="margin:0;">Edit Transaction</h3>
+            <button class="btn btn-outline" style="padding:4px 8px;" onclick="app.closeModal()">✕</button>
         </div>
-        <div class="card">
-            <div style="color:var(--text-muted); font-size:0.8rem;">Total Assets</div>
-            <div class="stat-val" style="font-size:1.5rem; font-weight:700; margin-top:5px;" id="dash-assets">₹0</div>
+        <input type="hidden" id="edit-id">
+        <div style="margin-bottom:10px;">
+            <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Description</label>
+            <input type="text" id="edit-desc" style="width:100%;">
         </div>
-        <div class="card">
-            <div style="color:var(--text-muted); font-size:0.8rem;">Net Profit (YTD)</div>
-            <div class="stat-val" style="font-size:1.5rem; font-weight:700; margin-top:5px;" id="dash-profit">₹0</div>
-        </div>
-    </div>
-    <div class="card">
-        <h3>Recent Transactions</h3>
-        <table id="dash-table">
-            <thead>
-                <tr><th>Date</th><th>Description</th><th>Account</th><th>GST</th><th>Net Amount</th><th>Status</th><th>Action</th></tr>
-            </thead>
-            <tbody id="dash-tx-body"></tbody>
-        </table>
-    </div>
-</section>
-<!-- 2. SMART ENTRY -->
-<section id="view-input" class="view-section">
-    <div class="chat-container">
-        <div class="chat-history" id="chat-history">
-            <div class="msg ai"> 💡 Smart Entry Active: Type naturally (e.g., "Paid rent 5000").<br>The server now handles all accounting math automatically. </div>
-        </div>
-        <div id="confirm-container"></div>
-        <div class="chat-input-area">
-            <button class="btn btn-icon" onclick="app.startVoice()">🎙️</button>
-            <input type="text" id="chat-input" list="category-suggestions" placeholder="Type transaction..." onkeypress="if(event.key==='Enter') app.processChatInput()">
-            <select style="width:120px;" id="voice-lang"><option value="en-IN">English</option><option value="hi-IN">Hindi</option></select>
-            <button class="btn btn-primary" onclick="app.processChatInput()">Send</button>
-        </div>
-    </div>
-</section>
-<!-- 3. UPLOAD -->
-<section id="view-upload" class="view-section">
-    <div class="card" style="max-width: 700px; margin: 0 auto;">
-        <h2 style="margin:0;">Bank Statement Import</h2>
-        <p style="color:var(--text-muted); font-size:0.9rem;">Upload to Node.js Backend for parsing.</p>
-        <div id="drop-zone" style="border: 2px dashed var(--border); border-radius: 8px; padding: 3rem; text-align: center; background: #f8fafc; cursor: pointer; margin: 1rem 0;" onclick="document.getElementById('file-input').click()">
-            <div style="font-size:2rem; margin-bottom:10px;">📄</div>
-            <p>Upload CSV / PDF</p>
-            <input type="file" id="file-input" hidden onchange="app.handleFileSelect(this)">
-        </div>
-        <div id="pending-imports-container" class="hidden">
-            <h3>Review & Match</h3>
-            <table id="import-list"></table>
-            <div style="text-align:right;">
-                <button class="btn btn-danger" onclick="app.cancelImport()">Cancel</button>
-                <button class="btn btn-primary" onclick="app.confirmImportBatch()">Import Unmatched</button>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+            <div>
+                <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Net Amount (₹)</label>
+                <input type="number" id="edit-amount" style="width:100%;" min="0">
+            </div>
+            <div>
+                <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Date</label>
+                <input type="date" id="edit-date" style="width:100%;">
             </div>
         </div>
+        <div style="margin-bottom:10px; padding:10px; background:#f0fdf4; border:1px dashed #86efac; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <label style="font-size:0.75rem; font-weight:600; color:#166534;">Amount includes GST?</label>
+                <div style="font-size:0.7rem; color:#166534;">Check if amount was quoted inclusive of tax</div>
+            </div>
+            <input type="checkbox" id="edit-inclusive-gst" style="width:18px; height:18px;">
+        </div>
+        <div style="display:grid; grid-template-columns:2fr 1fr 1fr; gap:10px; margin-bottom:10px;">
+            <div>
+                <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Category</label>
+                <input type="text" id="edit-category" list="category-suggestions" style="width:100%;">
+            </div>
+            <div>
+                <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Type</label>
+                <select id="edit-account-type" style="width:100%;">
+                    <option value="Expense">Expense</option>
+                    <option value="Asset">Asset</option>
+                    <option value="Liability">Liability</option>
+                    <option value="Income">Income</option>
+                    <option value="Equity">Equity</option>
+                </select>
+            </div>
+            <div>
+                <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Mode</label>
+                <select id="edit-mode" style="width:100%;">
+                    <option value="Cash">Cash</option>
+                    <option value="Bank">Bank</option>
+                    <option value="UPI">UPI</option>
+                </select>
+            </div>
+        </div>
+        <div style="margin-bottom:1.2rem;">
+            <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">GST Rate</label>
+            <select id="edit-gst-rate" style="width:100%;">
+                <option value="0">No GST (0%)</option>
+                <option value="5">5%</option>
+                <option value="12">12%</option>
+                <option value="18">18%</option>
+                <option value="28">28%</option>
+            </select>
+        </div>
+        <div style="text-align:right; display:flex; gap:10px; justify-content:flex-end;">
+            <button class="btn btn-outline" onclick="app.closeModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="app.saveEdit()">Save Changes</button>
+        </div>
     </div>
-</section>
-<!-- 4. REPORTS -->
-<section id="view-reports" class="view-section">
-    <div style="display:flex; gap:10px; margin-bottom:1rem; flex-wrap:wrap;">
-        <button class="btn btn-outline" id="btn-pl" onclick="app.switchReport('pl')">P&L Statement</button>
-        <button class="btn btn-outline" id="btn-bs" onclick="app.switchReport('bs')">Balance Sheet</button>
-        <button class="btn btn-outline" style="border-color:var(--info); color:var(--info);" id="btn-cf" onclick="app.switchReport('cf')">Cash Flow</button>
-    </div>
-    <div class="card">
-        <h3 id="report-title">Profit & Loss</h3>
-        <div id="report-display" style="line-height: 2;"></div>
-    </div>
-</section>
-</main>
 </div>
-<!-- MODAL -->
-<div class="modal-overlay" id="edit-modal">
-<div class="modal">
-    <div style="display:flex; justify-content:space-between; margin-bottom:15px;">
-        <h3 style="margin:0;">Edit Transaction</h3>
-        <button class="btn btn-outline" style="padding:4px 8px;" onclick="app.closeModal()">✕</button>
-    </div>
-    <input type="hidden" id="edit-id">
-    
-    <!-- Description Input -->
-    <div style="margin-bottom:10px;">
-        <label style="font-size:0.75rem; font-weight:600;">Description</label>
-        <input type="text" id="edit-desc" style="width:100%;">
-    </div>
 
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
-        <div>
-            <label style="font-size:0.75rem; font-weight:600;">Net Amount</label>
-            <input type="number" id="edit-amount" style="width:100%;">
-        </div>
-        <div>
-            <label style="font-size:0.75rem; font-weight:600;">Date</label>
-            <input type="date" id="edit-date" style="width:100%;">
-        </div>
-    </div>
-    <div style="margin-bottom:15px; padding:10px; background:#f0fdf4; border:1px dashed #86efac; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
-        <div>
-            <label style="font-size:0.75rem; font-weight:600; color:#166534;">Amount includes GST?</label>
-            <div style="font-size:0.7rem; color:#166534;">If user said "11800 incl tax", check this.</div>
-        </div>
-        <input type="checkbox" id="edit-inclusive-gst">
-    </div>
-    <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:10px; margin-bottom:10px;">
-        <div>
-            <label style="font-size:0.75rem; font-weight:600;">Category (CoA)</label>
-            <input type="text" id="edit-category" list="category-suggestions" style="width:100%;">
-        </div>
-        <div>
-            <label style="font-size:0.75rem; font-weight:600;">Type</label>
-            <select id="edit-account-type" style="width:100%;">
-                <option value="Expense">Expense</option>
-                <option value="Asset">Asset</option>
-                <option value="Liability">Liability</option>
-                <option value="Income">Income</option>
-                <option value="Equity">Equity</option>
-            </select>
-        </div>
-        <div>
-            <label style="font-size:0.75rem; font-weight:600;">Mode</label>
-            <select id="edit-mode" style="width:100%;">
-                <option value="Cash">Cash</option>
-                <option value="Bank">Bank</option>
-                <option value="UPI">UPI</option>
-            </select>
-        </div>
-    </div>
-    <div style="margin-bottom:20px;">
-        <label style="font-size:0.75rem; font-weight:600;">GST Rate</label>
-        <select id="edit-gst-rate" style="width:100%;">
-            <option value="0">No GST (0%)</option>
-            <option value="5">5%</option>
-            <option value="12">12%</option>
-            <option value="18">18%</option>
-            <option value="28">28%</option>
-        </select>
-    </div>
-    <div style="text-align:right;">
-        <button class="btn btn-primary" id="save-edit-btn" onclick="app.saveEdit()">Save Changes</button>
-    </div>
-</div>
-</div>
 <div class="toast-container" id="toast-container"></div>
-<script>
-// --- 1. CONFIG ---
-const API_URL = 'https://ledgerly-backend-lsyz.onrender.com/api'; 
-const UPLOAD_URL = 'https://ledgerly-backend-lsyz.onrender.com/api/upload';
-console.log("Backend URL:", API_URL);
 
-// --- 2. DATA API (UPDATED FOR SMART ENGINE) ---
+<script>
+// ─────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────
+const API_URL    = 'https://ledgerly-backend-lsyz.onrender.com/api';
+const UPLOAD_URL = 'https://ledgerly-backend-lsyz.onrender.com/api/upload';
+
+// ─────────────────────────────────────────────
+// FIX #8: tx store — avoids JSON.stringify in onclick (breaks with quotes)
+// We store transaction objects here and pass only the ID to onclick
+// ─────────────────────────────────────────────
+const TxStore = {
+    _map: {},
+    set(id, tx) { this._map[id] = tx; },
+    get(id)     { return this._map[id] || null; },
+    clear()     { this._map = {}; }
+};
+
+// ─────────────────────────────────────────────
+// DATA API
+// ─────────────────────────────────────────────
 const DataAPI = {
-    getToken: () => localStorage.getItem('ledgerly_token'),
-    setToken: (token) => localStorage.setItem('ledgerly_token', token),
-    clearToken: () => localStorage.removeItem('ledgerly_token'),
-    
-    async setStatus(status) {
+    getToken: ()       => localStorage.getItem('ledgerly_token'),
+    setToken: (t)      => localStorage.setItem('ledgerly_token', t),
+    clearToken: ()     => localStorage.removeItem('ledgerly_token'),
+
+    setStatus(status, text) {
         const el = document.getElementById('server-status');
-        if(!el) return;
+        if (!el) return;
         el.className = `server-status ${status}`;
-        el.innerText = status === 'online' ? 'Server Online' : (status === 'syncing' ? 'Syncing...' : 'Offline');
+        const labels = { online: 'Server Online', syncing: 'Syncing...', offline: 'Offline' };
+        el.innerText = text || labels[status] || status;
     },
 
     async request(endpoint, method = 'GET', body = null) {
@@ -576,68 +734,48 @@ const DataAPI = {
         const headers = { 'Content-Type': 'application/json' };
         const token = this.getToken();
         if (token) headers['Authorization'] = `Bearer ${token}`;
-
         try {
-            const options = { method, headers };
-            if (body) options.body = JSON.stringify(body);
-
-            const response = await fetch(`${API_URL}${endpoint}`, options);
-            
-            if (response.status === 401) {
+            const opts = { method, headers };
+            if (body) opts.body = JSON.stringify(body);
+            const res = await fetch(`${API_URL}${endpoint}`, opts);
+            if (res.status === 401) {
                 this.clearToken();
                 app.navigate('auth');
                 this.setStatus('offline');
                 return null;
             }
-
-            if (!response.ok) throw new Error('Network error');
-            const data = await response.json();
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
             this.setStatus('online');
             return data;
         } catch (e) {
-            console.error(e);
+            console.error('API error:', e);
             this.setStatus('offline');
-            showToast('Server Error', 'error');
             return null;
         }
     },
 
-    async login(email, password) {
-        return await this.request('/auth/login', 'POST', { email, password });
-    },
+    async login(email, password)           { return this.request('/auth/login',    'POST', { email, password }); },
+    async register(email, password, name)  { return this.request('/auth/register', 'POST', { email, password, name }); },
+    async getSync()                        { return this.request('/sync'); },
+    async saveSync(transactions)           { return this.request('/sync', 'POST', { transactions }); },
 
-    async register(email, password, name) {
-        return await this.request('/auth/register', 'POST', { email, password, name });
-    },
-
-    async getSync() {
-        return await this.request('/sync');
-    },
-
-    async saveSync(transactions) {
-        return await this.request('/sync', 'POST', { transactions });
-    },
-    
-    // NEW: SMART ENTRY REQUEST
     async smartEntry(text) {
         this.setStatus('syncing');
         const headers = { 'Content-Type': 'application/json' };
         const token = this.getToken();
         if (token) headers['Authorization'] = `Bearer ${token}`;
-
         try {
-            const response = await fetch(`${API_URL}/smart-entry`, {
+            const res = await fetch(`${API_URL}/smart-entry`, {
                 method: 'POST',
                 headers,
                 body: JSON.stringify({ text })
             });
-            const data = await response.json();
             this.setStatus('online');
-            return data;
+            return await res.json();
         } catch (e) {
-            console.error(e);
+            console.error('Smart entry error:', e);
             this.setStatus('offline');
-            showToast('Smart Entry Error', 'error');
             return null;
         }
     },
@@ -645,551 +783,760 @@ const DataAPI = {
     async uploadFile(file) {
         const formData = new FormData();
         formData.append('file', file);
-        const response = await fetch(UPLOAD_URL, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${this.getToken()}` },
-            body: formData
-        });
-        const result = await response.json();
-        return result.success ? result.data : null;
+        try {
+            const res = await fetch(UPLOAD_URL, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${this.getToken()}` },
+                body: formData
+            });
+            const result = await res.json();
+            return result.success ? result.data : null;
+        } catch (e) {
+            return null;
+        }
     }
 };
 
-// --- 3. STATE ---
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
 const State = {
     currentUser: null,
-    currentBizId: null, 
+    currentBizId: null,
     transactions: [],
-    businesses: [], 
+    businesses: [],
     pendingTx: null,
     importBatch: [],
-    
+    lockedMonths: [],
+
     get biz() {
         return {
-            transactions: this.transactions.filter(t => t.businessId == this.currentBizId),
-            lockedMonths: [] 
+            transactions: this.transactions.filter(t => t.businessId == this.currentBizId)
         };
     },
 
     async init() {
         const token = DataAPI.getToken();
-        if (token) {
-            const data = await DataAPI.getSync();
-            if (data && data.user) {
-                this.currentUser = data.user;
-                this.businesses = data.businesses;
-                this.transactions = data.transactions || [];
-                
-                if (this.businesses.length > 0) {
-                    this.currentBizId = this.businesses[0].id;
-                    app.updateBusinessSelect();
-                    app.navigate('dashboard');
-                } else {
-                    alert("No businesses found.");
-                }
-            } else {
-                app.navigate('auth');
+        if (!token) { app.navigate('auth'); return; }
+
+        const data = await DataAPI.getSync();
+        if (data && data.user) {
+            this.currentUser = data.user;
+            this.businesses  = data.businesses || [];
+            this.transactions = data.transactions || [];
+
+            // Update sidebar username
+            const name = data.user.name || data.user.email || 'User';
+            document.getElementById('sidebar-username').innerText = name;
+            document.getElementById('user-avatar').innerText = name.slice(0,2).toUpperCase();
+
+            if (this.businesses.length > 0) {
+                this.currentBizId = this.businesses[0].id;
+                app.updateBusinessSelect();
             }
+            app.navigate('dashboard');
         } else {
             app.navigate('auth');
         }
     },
 
     async save() {
-        const bizTransactions = this.transactions.filter(t => t.businessId == this.currentBizId);
-        await DataAPI.saveSync(bizTransactions);
+        const bizTx = this.transactions.filter(t => t.businessId == this.currentBizId);
+        await DataAPI.saveSync(bizTx);
         app.renderDashboard();
         app.renderReports();
     },
 
     async add(tx) {
-        // WE NO LONGER CALCULATE ENTRIES HERE. 
-        // The backend does it. We just pass the object.
-        const fullTx = { 
-            ...tx, 
-            id: Date.now(), 
-            businessId: this.currentBizId, 
-            status: 'draft', 
-            entries: tx.entries // Use entries from backend
+        const fullTx = {
+            ...tx,
+            id: tx.id || Date.now(),
+            businessId: this.currentBizId,
+            status: 'draft'
         };
         this.transactions.unshift(fullTx);
         await this.save();
+        return fullTx;
     },
-    
+
     async delete(id) {
         this.transactions = this.transactions.filter(t => t.id != id);
         await this.save();
     },
 
-    switchBusiness(id) {
-        this.currentBizId = id;
-        app.navigate('dashboard');
+    async confirmTransaction(id) {
+        const idx = this.transactions.findIndex(t => t.id == id);
+        if (idx > -1) {
+            this.transactions[idx].status = 'confirmed';
+            await this.save();
+        }
     }
 };
 
-// --- 4. APP CONTROLLER ---
+// ─────────────────────────────────────────────
+// APP CONTROLLER
+// ─────────────────────────────────────────────
 const app = {
-    reportView: 'pl', 
-    authMode: 'login', 
+    reportView: 'pl',
+    authMode: 'login',
+    currentRole: 'owner',
 
+    // ── AUTH ──────────────────────────────────
     setAuthMode(mode) {
         this.authMode = mode;
-        const btnLogin = document.getElementById('btn-auth-login');
-        const btnRegister = document.getElementById('btn-auth-register');
-
-        if (mode === 'login') {
-            btnLogin.className = 'btn btn-primary';
-            btnRegister.className = 'btn btn-outline';
-        } else {
-            btnLogin.className = 'btn btn-outline';
-            btnRegister.className = 'btn btn-primary';
-        }
-
+        document.getElementById('btn-auth-login').className    = mode === 'login'    ? 'btn btn-primary' : 'btn btn-outline';
+        document.getElementById('btn-auth-register').className = mode === 'register' ? 'btn btn-primary' : 'btn btn-outline';
         document.getElementById('auth-name').classList.toggle('hidden', mode === 'login');
+        document.getElementById('auth-btn-text').innerText = mode === 'login' ? 'Login' : 'Create Account';
+        document.getElementById('auth-message').innerText = '';
     },
 
     async handleAuthSubmit() {
-        const email = document.getElementById('auth-email').value;
+        const email    = document.getElementById('auth-email').value.trim();
         const password = document.getElementById('auth-password').value;
-        const name = document.getElementById('auth-name').value;
-        const msg = document.getElementById('auth-message');
+        const name     = document.getElementById('auth-name').value.trim();
+        const msg      = document.getElementById('auth-message');
+        const btn      = document.getElementById('auth-submit-btn');
 
-        msg.innerText = "Processing...";
-        
+        if (!email || !password) { msg.style.color = 'red'; msg.innerText = 'Please fill all fields'; return; }
+
+        btn.innerHTML = '<span class="spinner"></span>';
+        btn.disabled = true;
+
         let res;
         if (this.authMode === 'register') {
+            if (!name) { msg.style.color = 'red'; msg.innerText = 'Full name is required'; btn.innerHTML = '<span id="auth-btn-text">Create Account</span>'; btn.disabled = false; return; }
             res = await DataAPI.register(email, password, name);
         } else {
             res = await DataAPI.login(email, password);
         }
 
+        btn.disabled = false;
+        btn.innerHTML = `<span id="auth-btn-text">${this.authMode === 'login' ? 'Login' : 'Create Account'}</span>`;
+
         if (res && res.token) {
             DataAPI.setToken(res.token);
-            msg.innerText = "Success! Redirecting...";
-            setTimeout(() => State.init(), 1000);
+            msg.style.color = 'green';
+            msg.innerText = 'Success! Loading...';
+            setTimeout(() => State.init(), 800);
         } else {
-            msg.innerText = res ? res.error : "Connection failed";
+            msg.style.color = 'red';
+            msg.innerText = res ? (res.error || 'Authentication failed') : 'Could not connect to server';
         }
     },
 
     logout() {
-        DataAPI.clearToken();
-        location.reload();
+        if (confirm('Log out?')) {
+            DataAPI.clearToken();
+            TxStore.clear();
+            location.reload();
+        }
+    },
+
+    // ── NAVIGATION ────────────────────────────
+    navigate(view) {
+        // FIX #11: Proper handling of auth vs app views
+        const isAuth = view === 'auth';
+        document.getElementById('app-sidebar').style.display = isAuth ? 'none' : 'flex';
+        document.getElementById('app-header').style.display  = isAuth ? 'none' : 'flex';
+
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        const btn = document.querySelector(`button[onclick="app.navigate('${view}')"]`);
+        if (btn) btn.classList.add('active');
+
+        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+        const section = document.getElementById(`view-${view}`);
+        if (section) section.classList.add('active');
+
+        const titles = { dashboard: 'Dashboard', input: 'Smart Entry', upload: 'Bank Import', reports: 'Reports' };
+        const titleEl = document.getElementById('page-title');
+        if (titleEl && titles[view]) titleEl.innerText = titles[view];
+
+        if (view === 'dashboard') this.renderDashboard();
+        if (view === 'reports')   this.renderReports();
     },
 
     updateBusinessSelect() {
-        const select = document.getElementById('business-switcher');
-        select.innerHTML = '';
+        const sel = document.getElementById('business-switcher');
+        sel.innerHTML = '';
         State.businesses.forEach(b => {
             const opt = document.createElement('option');
-            opt.value = b.id;
-            opt.innerText = b.name;
-            select.appendChild(opt);
+            opt.value = b.id; opt.innerText = b.name;
+            sel.appendChild(opt);
         });
     },
-    
-    init: function() { 
+
+    // FIX #6: switchBusiness properly defined on app
+    switchBusiness(id) {
+        State.switchBusiness(id);
+    },
+
+    // FIX #4: switchRole properly defined
+    switchRole(role) {
+        this.currentRole = role;
+        const badge = document.getElementById('current-role-badge');
+        if (role === 'owner') {
+            badge.className = 'badge owner';
+            badge.innerText = 'Owner 👑';
+        } else {
+            badge.className = 'badge viewer';
+            badge.innerText = 'Viewer 👁️';
+        }
+        showToast(`Switched to ${role} view`, 'info');
+        this.renderDashboard();
+    },
+
+    // FIX #5: runMonthEnd properly defined
+    runMonthEnd() {
+        const now   = new Date();
+        const label = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+        if (confirm(`Lock all transactions for ${label}? This cannot be undone.`)) {
+            const key = `${now.getFullYear()}-${now.getMonth() + 1}`;
+            State.lockedMonths.push(key);
+            showToast(`${label} locked successfully`, 'success');
+            document.getElementById('month-lock-indicator').classList.remove('hidden');
+            this.renderDashboard();
+        }
+    },
+
+    // ── DASHBOARD ─────────────────────────────
+    formatCurrency(num) {
+        return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num || 0);
+    },
+
+    getBalances() {
+        let ledger = {};
+        State.biz.transactions.forEach(tx => {
+            if (tx.status !== 'confirmed') return;
+            if (!tx.entries || !Array.isArray(tx.entries)) return;
+            tx.entries.forEach(e => {
+                if (!ledger[e.account]) ledger[e.account] = { dr: 0, cr: 0, type: 'unknown' };
+                ledger[e.account].dr += (e.dr || 0);
+                ledger[e.account].cr += (e.cr || 0);
+            });
+        });
+        Object.keys(COA).forEach(type => {
+            COA[type].forEach(acc => { if (ledger[acc]) ledger[acc].type = type; });
+        });
+
+        let cash = 0, bank = 0, income = 0, expense = 0, assets = 0, liabilities = 0, capital = 0;
+        let operating = 0, investing = 0, financing = 0;
+
+        for (const [acc, vals] of Object.entries(ledger)) {
+            const net = Math.abs(vals.dr - vals.cr);
+            if (vals.type === 'Asset') {
+                if (acc === 'Cash') cash += net;
+                else if (acc === 'Bank') bank += net;
+                else assets += net;
+            } else if (vals.type === 'Expense')   expense    += net;
+            else if (vals.type === 'Income')      income     += net;
+            else if (vals.type === 'Liability')   liabilities += net;
+            else if (vals.type === 'Equity')      capital    += net;
+        }
+
+        State.biz.transactions.forEach(tx => {
+            if (tx.status !== 'confirmed' || !tx.entries) return;
+            tx.entries.forEach(e => {
+                if (e.account === 'Cash' || e.account === 'Bank') {
+                    const flow = (e.dr || 0) - (e.cr || 0);
+                    if      (tx.accountType === 'Income' || tx.accountType === 'Expense') operating += flow;
+                    else if (tx.accountType === 'Asset')                                  investing += flow;
+                    else if (tx.accountType === 'Liability' || tx.accountType === 'Equity') financing += flow;
+                }
+            });
+        });
+
+        const netProfit     = income - expense;
+        const totalEquity   = capital + netProfit;
+        return { cash, bank, income, expense, assets, liabilities, capital, netProfit, totalEquity, operating, investing, financing };
+    },
+
+    renderDashboard() {
+        const b = this.getBalances();
+        document.getElementById('dash-liquid').innerText = this.formatCurrency(b.cash + b.bank);
+        document.getElementById('dash-assets').innerText = this.formatCurrency(b.assets + b.cash + b.bank);
+        const profitEl = document.getElementById('dash-profit');
+        profitEl.innerText = this.formatCurrency(b.netProfit);
+        profitEl.style.color = b.netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+
+        const tbody  = document.getElementById('dash-tx-body');
+        const empty  = document.getElementById('dash-empty');
+        const table  = document.getElementById('dash-table');
+        const txList = State.biz.transactions.slice(0, 15);
+
+        tbody.innerHTML = '';
+        TxStore.clear();
+
+        if (txList.length === 0) {
+            empty.classList.remove('hidden');
+            table.style.display = 'none';
+        } else {
+            empty.classList.add('hidden');
+            table.style.display = '';
+
+            txList.forEach(t => {
+                // FIX #8: store tx in TxStore, only pass id to onclick
+                TxStore.set(t.id, t);
+
+                const isLocked = this.isTxLocked(t);
+                const gstBadge = t.gstRate > 0
+                    ? `<span class="badge" style="background:#dcfce7;color:#166534;">${t.gstRate}%</span>`
+                    : '<span style="color:#ccc;">—</span>';
+
+                const statusClass = t.status === 'confirmed' ? 'confirmed' : 'draft';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${t.date || '—'}</td>
+                    <td style="max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${t.desc || ''}">${t.desc || '—'}</td>
+                    <td>${t.category || '—'}</td>
+                    <td>${gstBadge}</td>
+                    <td style="font-weight:600;">${this.formatCurrency(t.netAmount)}</td>
+                    <td><span class="badge ${statusClass}">${t.status}</span></td>
+                    <td style="display:flex; gap:4px; flex-wrap:wrap;">
+                        ${t.status !== 'confirmed' ? `<button class="btn btn-sm btn-success" onclick="app.confirmTx(${t.id})">✓</button>` : ''}
+                        <button class="btn btn-sm btn-outline" onclick="app.openEditById(${t.id})">Edit</button>
+                        ${!isLocked ? `<button class="btn btn-sm btn-danger" onclick="app.deleteTx(${t.id})">Del</button>` : ''}
+                    </td>`;
+                tbody.appendChild(tr);
+            });
+        }
+    },
+
+    isTxLocked(tx) {
+        if (!tx.date) return false;
+        const d   = new Date(tx.date);
+        const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
+        return State.lockedMonths.includes(key);
+    },
+
+    async confirmTx(id) {
+        await State.confirmTransaction(id);
+        showToast('Transaction confirmed', 'success');
+    },
+
+    async deleteTx(id) {
+        if (confirm('Delete this transaction?')) {
+            await State.delete(id);
+            showToast('Deleted', 'warning');
+        }
+    },
+
+    // ── SMART ENTRY ───────────────────────────
+    async processChatInput() {
+        const input  = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+        const text   = input.value.trim();
+        if (!text) return;
+
+        const history = document.getElementById('chat-history');
+        const uMsg = document.createElement('div');
+        uMsg.className = 'msg user';
+        uMsg.innerText = text;
+        history.appendChild(uMsg);
+        input.value = '';
+        sendBtn.innerHTML = '<span class="spinner"></span>';
+        sendBtn.disabled = true;
+
+        history.scrollTop = history.scrollHeight;
+
+        // FIX #1: NLP.parse is now defined above
+        const parsed = NLP.parse(text);
+
+        if (parsed.amount === 0) {
+            const errMsg = document.createElement('div');
+            errMsg.className = 'msg error';
+            errMsg.innerText = '⚠️ No amount found. Try: "Paid rent 5000" or "Sales 12000 with 18% GST"';
+            history.appendChild(errMsg);
+            sendBtn.innerHTML = 'Send'; sendBtn.disabled = false;
+            return;
+        }
+
+        // Try smart backend first, fall back to NLP
+        let tx = null;
+        try {
+            const res = await DataAPI.smartEntry(text);
+            if (res && res.success && res.transaction) {
+                tx = res.transaction;
+                console.log('Smart Engine used ✅');
+            }
+        } catch (e) { /* fall through */ }
+
+        if (!tx) {
+            // FIX #1 + #2: Build a full tx object with entries using NLP parse
+            console.log('Falling back to local NLP...');
+            tx = this.buildLocalTx(parsed, text);
+        }
+
+        // FIX #2: Always set pendingTx so confirmPending works
+        State.pendingTx = tx;
+        this.renderConfirmationCard(tx);
+
+        sendBtn.innerHTML = 'Send';
+        sendBtn.disabled = false;
+        history.scrollTop = history.scrollHeight;
+    },
+
+    buildLocalTx(parsed, originalText) {
+        // Calculate GST
+        let netAmount = parsed.amount;
+        let gstAmount = 0;
+        let grossAmount = parsed.amount;
+
+        if (parsed.gstRate > 0) {
+            if (parsed.isInclusiveGST) {
+                netAmount   = Math.round(parsed.amount / (1 + parsed.gstRate / 100));
+                gstAmount   = parsed.amount - netAmount;
+                grossAmount = parsed.amount;
+            } else {
+                gstAmount   = Math.round(parsed.amount * parsed.gstRate / 100);
+                grossAmount = parsed.amount + gstAmount;
+            }
+        }
+
+        // Build double-entry journal entries
+        const entries = [];
+        const mode = parsed.mode; // Cash, Bank, UPI
+
+        if (parsed.accountType === 'Expense') {
+            entries.push({ account: parsed.category,          dr: netAmount, cr: 0 });
+            if (gstAmount > 0) entries.push({ account: 'Input Tax Credit', dr: gstAmount, cr: 0 });
+            entries.push({ account: mode === 'UPI' ? 'Bank' : mode, dr: 0, cr: grossAmount });
+        } else if (parsed.accountType === 'Income') {
+            entries.push({ account: mode === 'UPI' ? 'Bank' : mode, dr: grossAmount, cr: 0 });
+            if (gstAmount > 0) entries.push({ account: 'GST Payable', dr: 0, cr: gstAmount });
+            entries.push({ account: parsed.category, dr: 0, cr: netAmount });
+        } else if (parsed.accountType === 'Asset') {
+            entries.push({ account: parsed.category,                  dr: netAmount, cr: 0 });
+            entries.push({ account: mode === 'UPI' ? 'Bank' : mode,   dr: 0, cr: netAmount });
+        } else if (parsed.accountType === 'Liability') {
+            entries.push({ account: mode === 'UPI' ? 'Bank' : mode, dr: netAmount, cr: 0 });
+            entries.push({ account: parsed.category,                dr: 0, cr: netAmount });
+        } else if (parsed.accountType === 'Equity') {
+            entries.push({ account: mode === 'UPI' ? 'Bank' : mode, dr: netAmount, cr: 0 });
+            entries.push({ account: parsed.category,                dr: 0, cr: netAmount });
+        }
+
+        return {
+            id:            Date.now(),
+            desc:          parsed.desc || originalText,
+            date:          parsed.date,
+            netAmount,
+            gstAmount,
+            grossAmount,
+            gstRate:       parsed.gstRate,
+            isInclusiveGST: parsed.isInclusiveGST,
+            mode:          parsed.mode,
+            accountType:   parsed.accountType,
+            category:      parsed.category,
+            entries
+        };
+    },
+
+    renderConfirmationCard(tx) {
+        const container = document.getElementById('confirm-container');
+
+        // FIX #9: Safe check for entries
+        const entries = Array.isArray(tx.entries) ? tx.entries : [];
+        const ledgerRows = entries.map(e =>
+            `<tr>
+                <td>${e.account}</td>
+                <td class="dr">${e.dr > 0 ? 'Dr ' + e.dr : ''}</td>
+                <td class="cr">${e.cr > 0 ? 'Cr ' + e.cr : ''}</td>
+            </tr>`
+        ).join('');
+
+        const drTotal = entries.reduce((s, e) => s + (e.dr || 0), 0);
+        const crTotal = entries.reduce((s, e) => s + (e.cr || 0), 0);
+        const balanced = Math.abs(drTotal - crTotal) < 1;
+
+        // FIX #8: store in TxStore instead of JSON.stringify in onclick
+        TxStore.set(tx.id, tx);
+
+        container.innerHTML = `
+        <div class="confirm-card">
+            <div class="confirm-header">
+                <span>📋 Double-Entry Verification ${balanced ? '✅' : '⚠️ Unbalanced'}</span>
+                <span style="cursor:pointer;" onclick="app.cancelPending()">✕</span>
+            </div>
+            <div class="confirm-body">
+                <div class="confirm-row"><span style="color:var(--text-muted);">Description</span><span style="font-weight:600; max-width:60%; text-align:right;">${tx.desc || '—'}</span></div>
+                <div class="confirm-row"><span style="color:var(--text-muted);">Type</span><span style="font-weight:600;">${tx.accountType}</span></div>
+                <div class="confirm-row"><span style="color:var(--text-muted);">Amount</span><span style="font-weight:600;">${this.formatCurrency(tx.netAmount)}</span></div>
+                ${tx.gstAmount > 0 ? `<div class="confirm-row"><span style="color:var(--text-muted);">GST (${tx.gstRate}%)</span><span style="color:var(--success);">+ ${this.formatCurrency(tx.gstAmount)}</span></div>` : ''}
+                <table class="mini-ledger">
+                    <thead><tr><th>Account</th><th>Debit</th><th>Credit</th></tr></thead>
+                    <tbody>${ledgerRows}</tbody>
+                </table>
+                <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+                    <button class="btn btn-danger" onclick="app.cancelPending()">Cancel</button>
+                    <button class="btn btn-primary" onclick="app.confirmPending()">✅ Confirm Entry</button>
+                    <button class="btn btn-outline" style="margin-left:auto;" onclick="app.openEditById(${tx.id})">✏️ Edit</button>
+                </div>
+            </div>
+        </div>`;
+        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    },
+
+    // FIX #2: confirmPending now works for both smart and local entries
+    async confirmPending() {
+        if (!State.pendingTx) return;
+        const tx = State.pendingTx;
+        await State.add(tx);
+
+        document.getElementById('confirm-container').innerHTML = '';
+        const history = document.getElementById('chat-history');
+        const aMsg    = document.createElement('div');
+        aMsg.className = 'msg ai';
+        aMsg.innerHTML = `✅ <strong>Entry added:</strong> ${tx.desc} — ${this.formatCurrency(tx.netAmount)}`;
+        history.appendChild(aMsg);
+        history.scrollTop = history.scrollHeight;
+        State.pendingTx = null;
+    },
+
+    cancelPending() {
+        State.pendingTx = null;
+        document.getElementById('confirm-container').innerHTML = '';
+    },
+
+    startVoice() {
+        if (!('webkitSpeechRecognition' in window)) { showToast('Voice not supported in this browser', 'error'); return; }
+        const lang = document.getElementById('voice-lang').value;
+        const rec  = new webkitSpeechRecognition();
+        rec.lang              = lang;
+        rec.continuous        = false;
+        rec.interimResults    = false;
+        rec.onstart           = () => showToast('Listening...', 'info');
+        rec.onresult          = (e) => {
+            document.getElementById('chat-input').value = e.results[0][0].transcript;
+            this.processChatInput();
+        };
+        rec.onerror = (e) => showToast('Voice error: ' + e.error, 'error');
+        rec.start();
+    },
+
+    // ── BANK IMPORT ───────────────────────────
+    async handleFileSelect(input) {
+        const file = input.files && input.files[0];
+        if (!file) return;
+        showToast('Uploading...', 'info');
+        const parsed = await DataAPI.uploadFile(file);
+        if (parsed && parsed.length > 0) {
+            State.importBatch = parsed;
+            const tbody = document.getElementById('import-tbody');
+            tbody.innerHTML = State.importBatch.map(t =>
+                `<tr>
+                    <td>${t.date || '—'}</td>
+                    <td>${t.desc || '—'}</td>
+                    <td style="font-weight:bold;">${this.formatCurrency(t.amount)}</td>
+                    <td>${t.category || 'Misc'}</td>
+                </tr>`
+            ).join('');
+            document.getElementById('pending-imports-container').classList.remove('hidden');
+            showToast(`${parsed.length} transactions parsed`, 'success');
+        } else {
+            showToast('Parse failed or no data returned', 'error');
+        }
+    },
+
+    // FIX #12: confirmImportBatch uses sequential await instead of forEach+async
+    async confirmImportBatch() {
+        showToast('Importing...', 'info');
+        for (const t of State.importBatch) {
+            await State.add({ ...t, netAmount: t.amount, accountType: t.accountType || 'Expense', category: t.category || 'Misc', mode: 'Bank', entries: t.entries || [] });
+        }
+        State.importBatch = [];
+        document.getElementById('pending-imports-container').classList.add('hidden');
+        document.getElementById('import-tbody').innerHTML = '';
+        showToast('Import complete!', 'success');
+        this.navigate('dashboard');
+    },
+
+    // FIX #3: cancelImport was missing
+    cancelImport() {
+        State.importBatch = [];
+        document.getElementById('pending-imports-container').classList.add('hidden');
+        document.getElementById('import-tbody').innerHTML = '';
+        document.getElementById('file-input').value = '';
+    },
+
+    // ── REPORTS ───────────────────────────────
+    switchReport(v) {
+        this.reportView = v;
+        ['pl', 'bs', 'cf'].forEach(id => {
+            const btn = document.getElementById('btn-' + id);
+            btn.className = id === v ? 'btn btn-primary' : 'btn btn-outline';
+        });
+        this.renderReports();
+    },
+
+    renderReports() {
+        const b = this.getBalances();
+        const totalAssets = b.cash + b.bank + b.assets;
+        const totalEqLiab = b.liabilities + b.totalEquity;
+        const balanced    = Math.abs(totalAssets - totalEqLiab) < 1;
+        const fmt         = (n) => this.formatCurrency(n);
+
+        const row = (label, amount, bold, color) =>
+            `<div style="display:flex; justify-content:space-between; padding:4px 0; ${bold ? 'font-weight:700; border-top:1px solid #eee; margin-top:4px;' : ''} ${color ? 'color:' + color + ';' : ''}">
+                <span>${label}</span><span>${fmt(amount)}</span>
+            </div>`;
+
+        if (this.reportView === 'pl') {
+            document.getElementById('report-title').innerText = '📊 Profit & Loss Statement';
+            document.getElementById('report-display').innerHTML = `
+                <div style="font-weight:700; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">INCOME</div>
+                ${row('Total Revenue', b.income)}
+                <div style="font-weight:700; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.05em; margin:12px 0 4px;">EXPENSES</div>
+                ${row('Total Expenses', b.expense)}
+                ${row('Net Profit / Loss', b.netProfit, true, b.netProfit >= 0 ? 'var(--success)' : 'var(--danger)')}`;
+
+        } else if (this.reportView === 'bs') {
+            document.getElementById('report-title').innerText = '🏦 Balance Sheet';
+            document.getElementById('report-display').innerHTML = `
+                <div style="font-weight:700; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; margin-bottom:4px;">ASSETS</div>
+                ${row('Cash', b.cash)}
+                ${row('Bank', b.bank)}
+                ${row('Fixed Assets', b.assets)}
+                ${row('Total Assets', totalAssets, true)}
+                <div style="height:16px;"></div>
+                <div style="font-weight:700; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; margin-bottom:4px;">EQUITY & LIABILITIES</div>
+                ${row('Total Liabilities', b.liabilities)}
+                ${row("Owner's Capital", b.capital)}
+                ${row('Retained Earnings', b.netProfit)}
+                ${row('Total Equity + Liabilities', totalEqLiab, true)}
+                <div style="margin-top:12px; padding:8px; background:${balanced ? '#dcfce7' : '#fee2e2'}; text-align:center; font-weight:700; border-radius:6px;">
+                    ${balanced ? '✅ BALANCED' : '❌ UNBALANCED — check your entries'}
+                </div>`;
+
+        } else if (this.reportView === 'cf') {
+            const netCash = b.operating + b.investing + b.financing;
+            document.getElementById('report-title').innerText = '💸 Cash Flow Statement';
+            document.getElementById('report-display').innerHTML = `
+                <div style="font-weight:700; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; margin-bottom:4px;">OPERATING ACTIVITIES</div>
+                ${row('Net Cash from Operations', b.operating, false, b.operating >= 0 ? 'var(--success)' : 'var(--danger)')}
+                <div style="height:12px;"></div>
+                <div style="font-weight:700; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; margin-bottom:4px;">INVESTING ACTIVITIES</div>
+                ${row('Net Cash from Investing', b.investing, false, b.investing >= 0 ? 'var(--success)' : 'var(--danger)')}
+                <div style="height:12px;"></div>
+                <div style="font-weight:700; color:var(--text-muted); font-size:0.75rem; text-transform:uppercase; margin-bottom:4px;">FINANCING ACTIVITIES</div>
+                ${row('Net Cash from Financing', b.financing, false, b.financing >= 0 ? 'var(--success)' : 'var(--danger)')}
+                ${row('Net Change in Cash', netCash, true, netCash >= 0 ? 'var(--success)' : 'var(--danger)')}`;
+        }
+    },
+
+    // ── EDIT MODAL ────────────────────────────
+    // FIX #8: openEditById uses TxStore — no JSON.stringify in HTML
+    openEditById(id) {
+        const t = TxStore.get(id);
+        if (!t) { showToast('Transaction not found', 'error'); return; }
+        this.openEdit(id, t);
+    },
+
+    openEdit(id, t) {
+        document.getElementById('edit-id').value               = t.id || id;
+        document.getElementById('edit-desc').value             = t.desc       || '';
+        document.getElementById('edit-amount').value           = t.netAmount  || 0;
+        document.getElementById('edit-category').value         = t.category   || '';
+        document.getElementById('edit-date').value             = t.date       || '';
+        document.getElementById('edit-mode').value             = t.mode       || 'Cash';
+        document.getElementById('edit-account-type').value     = t.accountType|| 'Expense';
+        document.getElementById('edit-gst-rate').value         = t.gstRate    || 0;
+        document.getElementById('edit-inclusive-gst').checked  = !!t.isInclusiveGST;
+        document.getElementById('edit-modal').classList.add('active');
+    },
+
+    async saveEdit() {
+        const id = document.getElementById('edit-id').value;
+        const updates = {
+            desc:          document.getElementById('edit-desc').value,
+            netAmount:     parseFloat(document.getElementById('edit-amount').value),
+            category:      document.getElementById('edit-category').value,
+            isInclusiveGST:document.getElementById('edit-inclusive-gst').checked,
+            gstRate:       parseInt(document.getElementById('edit-gst-rate').value),
+            mode:          document.getElementById('edit-mode').value,
+            accountType:   document.getElementById('edit-account-type').value,
+            date:          document.getElementById('edit-date').value
+        };
+
+        const idx = State.transactions.findIndex(t => t.id == id);
+        if (idx > -1) {
+            const existing = State.transactions[idx];
+            // Re-run local entry calculation if amount/type changed
+            const amountChanged = updates.netAmount !== existing.netAmount;
+            const typeChanged   = updates.accountType !== existing.accountType;
+
+            let finalTx = { ...existing, ...updates };
+
+            if (amountChanged || typeChanged) {
+                const rebuilt = this.buildLocalTx({
+                    amount:        updates.netAmount,
+                    gstRate:       updates.gstRate,
+                    isInclusiveGST:updates.isInclusiveGST,
+                    mode:          updates.mode,
+                    accountType:   updates.accountType,
+                    category:      updates.category,
+                    date:          updates.date,
+                    desc:          updates.desc
+                }, updates.desc);
+                finalTx.entries     = rebuilt.entries;
+                finalTx.gstAmount   = rebuilt.gstAmount;
+                finalTx.grossAmount = rebuilt.grossAmount;
+            }
+
+            State.transactions[idx] = finalTx;
+            await State.save();
+            showToast('Changes saved', 'success');
+        }
+        this.closeModal();
+    },
+
+    closeModal() {
+        document.getElementById('edit-modal').classList.remove('active');
+    },
+
+    // ── INIT ──────────────────────────────────
+    init() {
+        // Populate category datalist
         const dl = document.getElementById('category-suggestions');
-        if(dl && COA) { Object.values(COA).flat().forEach(c => {
-            const opt = document.createElement('option'); opt.value = c; dl.appendChild(opt);
-        });}
+        Object.values(COA).flat().forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c;
+            dl.appendChild(opt);
+        });
         State.init();
     }
 };
 
-// --- 5. CORE ENGINE (LIGHTWEIGHT) ---
-// Removed complex math here. We rely on the Server.
-// Only formatting helpers remain.
+// Close modal on overlay click
+document.getElementById('edit-modal').addEventListener('click', function(e) {
+    if (e.target === this) app.closeModal();
+});
 
-app.formatCurrency = (num) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
-app.getBalances = () => {
-    let ledger = {};
-    State.biz.transactions.forEach(tx => {
-        if(tx.status === 'confirmed') {
-            // Use the entries array PRE-CALCULATED by server
-            if(!tx.entries) return; 
-            tx.entries.forEach(e => {
-                if(!ledger[e.account]) ledger[e.account] = { dr: 0, cr: 0, type: 'unknown' };
-                ledger[e.account].dr += e.dr;
-                ledger[e.account].cr += e.cr;
-            });
-        }
-    });
-    Object.keys(COA).forEach(type => {
-        COA[type].forEach(acc => {
-            if(ledger[acc]) ledger[acc].type = type;
-        });
-    });
-    let cash = 0, bank = 0, income = 0, expense = 0, assets = 0, liabilities = 0, capital = 0;
-    for (const [acc, vals] of Object.entries(ledger)) {
-        const net = vals.dr - vals.cr;
-        const absNet = Math.abs(net);
-        if (vals.type === 'Asset') {
-            if(acc === 'Cash') cash += absNet;
-            else if(acc === 'Bank') bank += absNet;
-            else assets += absNet;
-        } else if (vals.type === 'Expense') expense += absNet;
-        else if (vals.type === 'Income') income += absNet;
-        else if (vals.type === 'Liability') liabilities += absNet;
-        else if (vals.type === 'Equity') capital += absNet;
-    }
-    const retainedEarnings = income - expense;
-    const totalEquity = capital + retainedEarnings;
-    let operating = 0, investing = 0, financing = 0;
-    State.biz.transactions.forEach(tx => {
-        if(tx.status !== 'confirmed') return;
-        if(!tx.entries) return;
-        tx.entries.forEach(e => {
-            if (e.account === 'Cash' || e.account === 'Bank') {
-                const netFlow = e.dr - e.cr;
-                if (tx.accountType === 'Income' || tx.accountType === 'Expense') { operating += netFlow; }
-                else if (tx.accountType === 'Asset') { investing += netFlow; }
-                else if (tx.accountType === 'Liability' || tx.accountType === 'Equity') { financing += netFlow; }
-            }
-        });
-    });
-    return { cash, bank, income, expense, assets, liabilities, capital, retainedEarnings, totalEquity, operating, investing, financing, netProfit: retainedEarnings };
+// FIX: switchBusiness on State too
+State.switchBusiness = function(id) {
+    this.currentBizId = id;
+    app.navigate('dashboard');
 };
-app.navigate = function(view) {
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    const btn = document.querySelector(`button[onclick="app.navigate('${view}')"]`);
-    if(btn) btn.classList.add('active');
-    
-    document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-    
-    if (view === 'auth') {
-        document.querySelector('.sidebar').style.display = 'none';
-        document.querySelector('header').style.display = 'none';
-    } else {
-        document.querySelector('.sidebar').style.display = 'flex';
-        document.querySelector('header').style.display = 'flex';
-    }
-    
-    document.getElementById(`view-${view}`).classList.add('active');
-    if(view === 'dashboard') this.renderDashboard();
-    if(view === 'reports') this.renderReports();
-};
-app.renderDashboard = function() {
-    const b = this.getBalances();
-    document.getElementById('dash-liquid').innerText = this.formatCurrency(b.cash + b.bank);
-    document.getElementById('dash-assets').innerText = this.formatCurrency(b.assets + b.cash + b.bank);
-    document.getElementById('dash-profit').innerText = this.formatCurrency(b.netProfit);
-    const tbody = document.getElementById('dash-tx-body');
-    tbody.innerHTML = '';
-    State.biz.transactions.slice(0, 10).forEach(t => {
-        const tr = document.createElement('tr');
-        const isLocked = false; 
-        const gstBadge = t.gstRate > 0 ? `<span class="badge" style="background:#dcfce7; color:#166534;">${t.gstRate}% GST</span>` : '-';
-        
-        tr.innerHTML = `
-            <td>${t.date}</td>
-            <td>${t.desc}</td>
-            <td>${t.category}</td>
-            <td>${gstBadge}</td>
-            <td style="font-weight:600;">${this.formatCurrency(t.netAmount)}</td>
-            <td><span class="badge">${t.status}</span></td>
-            <td>
-                <!-- FIX: ENSURE EDIT BUTTON WORKS FOR SERVER CALCULATED ENTRIES -->
-                <button class="btn btn-outline" style="padding:2px 6px; font-size:0.7rem;" onclick="app.openEdit(${t.id}, ${JSON.stringify(t)})">Edit</button>
-                ${!isLocked ? `<button class="btn btn-outline" style="padding:2px 6px; font-size:0.7rem;" onclick="app.deleteTx(${t.id})">Del</button>` : ''}
-            </td>
-        `;
-        tbody.appendChild(tr);
-    });
-};
-app.renderReports = function() {
-    const b = this.getBalances();
-    const totalAssets = b.cash + b.bank + b.assets;
-    const totalEquity = b.liabilities + b.totalEquity;
-    
-    if (this.reportView === 'pl') {
-        document.getElementById('report-title').innerText = "Profit & Loss";
-        document.getElementById('report-display').innerHTML = `
-            <div style="border-bottom:1px solid #eee; font-weight:bold;">INCOME</div>
-            <div style="display:flex; justify-content:space-between;"><span>Revenue</span><span>${this.formatCurrency(b.income)}</span></div>
-            <div style="border-bottom:1px solid #eee; font-weight:bold; margin-top:10px;">EXPENSES</div>
-            <div style="display:flex; justify-content:space-between;"><span>Operating</span><span>(${this.formatCurrency(b.expense)})</span></div>
-            <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:10px; color:${b.netProfit>=0?'var(--success)':'var(--danger)'}">
-                <span>Net Profit</span><span>${this.formatCurrency(b.netProfit)}</span>
-            </div>`;
-    } else if (this.reportView === 'bs') {
-        document.getElementById('report-title').innerText = "Balance Sheet";
-        const balanced = Math.abs(totalAssets - totalEquity) < 1;
-        document.getElementById('report-display').innerHTML = `
-            <div style="border-bottom:1px solid #eee; font-weight:bold;">ASSETS</div>
-            <div style="display:flex; justify-content:space-between;"><span>Cash & Bank</span><span>${this.formatCurrency(b.cash + b.bank)}</span></div>
-            <div style="display:flex; justify-content:space-between;"><span>Fixed Assets</span><span>${this.formatCurrency(b.assets)}</span></div>
-            <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:5px;"><span>TOTAL ASSETS</span><span>${this.formatCurrency(totalAssets)}</span></div>
-            <div style="height:20px;"></div>
-            <div style="border-bottom:1px solid #eee; font-weight:bold;">EQUITY & LIABILITIES</div>
-            <div style="display:flex; justify-content:space-between;"><span>Liabilities</span><span>${this.formatCurrency(b.liabilities)}</span></div>
-            <div style="display:flex; justify-content:space-between;"><span>Owner's Capital</span><span>${this.formatCurrency(b.capital)}</span></div>
-            <div style="display:flex; justify-content:space-between;"><span>Retained Earnings</span><span>${this.formatCurrency(b.retainedEarnings)}</span></div>
-            <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:5px;"><span>TOTAL</span><span>${this.formatCurrency(totalEquity)}</span></div>
-            <div style="margin-top:10px; padding:5px; background:${balanced?'#dcfce7':'#fee2e2'}; text-align:center; font-weight:bold;">
-                ${balanced ? 'BALANCED ✅' : 'UNBALANCED ❌'}
-            </div>`;
-    } else if (this.reportView === 'cf') {
-        document.getElementById('report-title').innerText = "Cash Flow Statement";
-        document.getElementById('report-display').innerHTML = `
-            <div style="border-bottom:1px solid #eee; font-weight:bold;">OPERATING ACTIVITIES</div>
-            <div style="display:flex; justify-content:space-between;"><span>Net Cash Flow from Ops</span><span style="color:${b.operating>=0?'var(--success)':'var(--danger)'}">${this.formatCurrency(b.operating)}</span></div>
-            <div style="height:20px;"></div>
-            <div style="border-bottom:1px solid #eee; font-weight:bold;">INVESTING ACTIVITIES</div>
-            <div style="display:flex; justify-content:space-between;"><span>Net Cash Flow from Investing</span><span style="color:${b.investing>=0?'var(--success)':'var(--danger)'}">${this.formatCurrency(b.investing)}</span></div>
-            <div style="height:20px;"></div>
-            <div style="border-bottom:1px solid #eee; font-weight:bold;">FINANCING ACTIVITIES</div>
-            <div style="display:flex; justify-content:space-between;"><span>Net Cash Flow from Financing</span><span style="color:${b.financing>=0?'var(--success)':'var(--danger)'}">${this.formatCurrency(b.financing)}</span></div>
-            <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:10px;">
-                <span>Net Change in Cash</span><span>${this.formatCurrency(b.operating + b.investing + b.financing)}</span>
-            </div>`;
-    }
-}
-// --- REPLACE THIS FUNCTION ENTIRELY ---
 
-app.processChatInput = async function() {
-    const input = document.getElementById('chat-input');
-    const text = input.value.trim();
-    if(!text) return;
-    
-    const history = document.getElementById('chat-history');
-    const uMsg = document.createElement('div');
-    uMsg.className = 'msg user';
-    uMsg.innerText = text;
-    history.appendChild(uMsg);
-    input.value = '';
-
-    // --- NEW: CHECK BACKEND STATUS (Smart Entry) ---
-    let useSmartEntry = false;
-    try {
-        // PING the new Smart Entry endpoint to see if it's live
-        const response = await fetch(`${API_URL}/smart-entry`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${DataAPI.getToken()}` }
-        });
-
-        if (response.ok) {
-            useSmartEntry = true; // Backend is up, use the Smart Engine
-            console.log("Smart Engine Online. Using AI Accounting...");
-        } else {
-            useSmartEntry = false; // Backend is down or 404, use Manual Math
-            console.warn("Smart Engine Offline. Using Standard Entry.");
-        }
-    } catch (e) {
-        console.warn("Network check failed. Assuming standard entry.");
-        useSmartEntry = false;
-    }
-
-    // --- EXECUTION (WITH FALLBACK) ---
-    setTimeout(async () => {
-        const parsed = NLP.parse(text);
-        if(parsed.amount === 0) { showToast('No amount', 'error'); return; }
-        
-        if (useSmartEntry) {
-            // 1. Use Smart Backend
-            const result = await DataAPI.smartEntry(text);
-            if (result && result.success) {
-                const tx = result.transaction;
-                app.renderConfirmationCard(tx); // Smart Backend returns full transaction object with calculated entries
-            } else {
-                showToast('Smart Entry Error', 'error');
-            }
-        } else {
-            // 2. Use Standard Logic (Frontend calculates entries)
-            // This ensures you never see "Failing to Process Entry" if backend is down
-            State.pendingTx = { ...parsed, netAmount: parsed.amount };
-            app.renderConfirmationCard(State.pendingTx); // Renders card with local calculation
-        }
-    }, 500);
-};
-app.renderConfirmationCard = function(tx) {
-    const container = document.getElementById('confirm-container');
-    
-    // Server provided entries, we just render them
-    const ledgerHTML = `<table class="mini-ledger">${tx.entries.map(e => `<tr><td>${e.account}</td><td>${e.dr>0 ? 'Dr '+e.dr : ''}</td><td>${e.cr>0 ? 'Cr '+e.cr : ''}</td></tr>`).join('')}</table>`;
-
-    // FIX: ADDED EDIT BUTTON IN CONFIRMATION CARD
-    container.innerHTML = `<div class="confirm-card">
-        <div class="confirm-header">
-            <span>Double-Entry Verification</span>
-            <span style="cursor:pointer;" onclick="app.cancelPending()">✕</span>
-        </div>
-        <div class="confirm-body">
-            <div class="confirm-row"><span>Type</span><span style="font-weight:600;">${tx.accountType}</span></div>
-            <div style="margin-bottom:10px;">${ledgerHTML}</div>
-            <div class="confirm-actions" style="margin-top:15px; display:flex; gap:10px;">
-                <button class="btn btn-danger" onclick="app.cancelPending()">Cancel</button>
-                <button class="btn btn-primary" onclick="app.confirmPending()">Confirm Entry</button>
-                <!-- FIX: EDIT BUTTON ADDED HERE -->
-                <button class="btn btn-outline" style="margin-left:auto;" onclick="app.openEdit(${tx.id}, ${JSON.stringify(tx)})">✏️ Edit</button>
-            </div>
-        </div>
-    </div>`;
-}
-app.confirmPending = async function() {
-    if(State.pendingTx) {
-        // ADD TO STATE (Server already calculated entries)
-        await State.add(State.pendingTx);
-        
-        document.getElementById('confirm-container').innerHTML = '';
-        const history = document.getElementById('chat-history');
-        const aMsg = document.createElement('div');
-        aMsg.className = 'msg ai';
-        aMsg.innerText = "Entry Confirmed via Smart Engine.";
-        history.appendChild(aMsg);
-        State.pendingTx = null;
-    }
-}
-app.cancelPending = function() {
-    State.pendingTx = null;
-    document.getElementById('confirm-container').innerHTML = '';
-}
-app.startVoice = function() {
-    if (!('webkitSpeechRecognition' in window)) { showToast('Voice API not supported', 'error'); return; }
-    const lang = document.getElementById('voice-lang').value;
-    const recognition = new webkitSpeechRecognition();
-    recognition.lang = lang;
-    recognition.continuous = false;
-    recognition.interimResults = false;
-    recognition.onstart = () => showToast('Listening...', 'info');
-    recognition.onend = () => console.log('Voice ended');
-    recognition.onresult = (e) => {
-        const transcript = e.results[0][0].transcript;
-        document.getElementById('chat-input').value = transcript;
-        this.processChatInput();
-    };
-    recognition.start();
-}
-app.handleFileSelect = async function(input) {
-    if(input.files.length > 0) {
-        const file = input.files[0];
-        showToast('Uploading to Server...', 'info');
-        const parsedData = await DataAPI.uploadFile(file);
-        if(parsedData) {
-            State.importBatch = parsedData;
-            const list = document.getElementById('import-list');
-            list.innerHTML = State.importBatch.map(t => `<tr><td>${t.date}</td><td>${t.desc}</td><td style="font-weight:bold;">${app.formatCurrency(t.amount)}</td></tr>`).join('');
-            document.getElementById('pending-imports-container').classList.remove('hidden');
-            showToast('Parsed Successfully', 'success');
-        }
-    }
-}
-app.confirmImportBatch = async function() {
-    State.importBatch.forEach(t => State.add({...t, netAmount:t.amount, accountType:'Expense', category:'Misc', mode:'Bank'}));
-    State.importBatch = [];
-    document.getElementById('pending-imports-container').classList.add('hidden');
-    showToast('Imported', 'success');
-    this.navigate('dashboard');
-}
-app.switchReport = function(v) {
-    this.reportView = v;
-    ['pl','bs','cf'].forEach(id => {
-        const btn = document.getElementById('btn-'+id);
-        btn.classList.remove('btn-primary');
-        btn.classList.add('btn-outline');
-    });
-    const activeBtn = document.getElementById('btn-'+v);
-    activeBtn.classList.remove('btn-outline');
-    activeBtn.classList.add('btn-primary');
-    this.renderReports();
-}
-State.confirmTransaction = async function(id) {
-    const idx = this.transactions.findIndex(t => t.id == id);
-    if(idx > -1) {
-        this.transactions[idx].status = 'confirmed';
-        await this.save();
-    }
-}
-app.deleteTx = async function(id) {
-    if(confirm("Delete?")) await State.delete(id);
-}
-
-// GLOBAL UTILITIES
-function showToast(msg, type='success') {
+// ─────────────────────────────────────────────
+// TOAST
+// ─────────────────────────────────────────────
+function showToast(msg, type = 'success') {
     const container = document.getElementById('toast-container');
-    if(!container) return;
+    if (!container) return;
+    const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.innerHTML = `<span>${type==='success'?'✅':(type==='error'?'❌':'⚠️')}</span> ${msg}`;
+    toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span> ${msg}`;
     container.appendChild(toast);
+    setTimeout(() => toast.style.opacity = '0', 2700);
     setTimeout(() => toast.remove(), 3000);
 }
 
-// FIX: OPEN EDIT WITH SERIALIZED OBJECT
-app.openEdit = function(id, txString) {
-    // Parse the full object passed from dashboard or confirmation card
-    const t = typeof txString === 'string' ? JSON.parse(txString) : txString;
-    
-    if(!t) return;
-
-    document.getElementById('edit-id').value = t.id;
-    document.getElementById('edit-desc').value = t.desc || ''; 
-    document.getElementById('edit-amount').value = t.netAmount;
-    document.getElementById('edit-category').value = t.category;
-    document.getElementById('edit-date').value = t.date;
-    document.getElementById('edit-mode').value = t.mode;
-    document.getElementById('edit-account-type').value = t.accountType;
-    document.getElementById('edit-gst-rate').value = t.gstRate;
-    document.getElementById('edit-inclusive-gst').checked = t.isInclusiveGST;
-    
-    document.getElementById('edit-modal').classList.add('active');
-}
-
-app.saveEdit = async function() {
-    const id = document.getElementById('edit-id').value;
-    const updates = {
-        desc: document.getElementById('edit-desc').value,
-        netAmount: parseFloat(document.getElementById('edit-amount').value),
-        category: document.getElementById('edit-category').value,
-        isInclusiveGST: document.getElementById('edit-inclusive-gst').checked,
-        gstRate: parseInt(document.getElementById('edit-gst-rate').value),
-        mode: document.getElementById('edit-mode').value,
-        accountType: document.getElementById('edit-account-type').value
-    };
-    
-    const idx = State.transactions.findIndex(t => t.id == id);
-    if(idx > -1) {
-        // RE-CALCULATE ENTRIES ON SERVER (OR CLIENT IF SERVER FAILS)
-        // We try to call smart-entry API to re-calculate, 
-        // but if that fails, we fallback to local calculation (safest)
-        
-        let finalTx = { ...State.transactions[idx], ...updates };
-        
-        try {
-            const result = await DataAPI.smartEntry(`${updates.desc} ${updates.netAmount}`);
-            if (result && result.transaction) {
-                finalTx.entries = result.transaction.entries;
-            } else {
-                // Fallback to local calculation if backend fails
-                // Use calculateGST and generateJournalEntries logic if you want client-side fallback
-                // For now, we assume the update is just fields, recalculate logic needed? 
-                // Actually, for "Smart Entry", let's keep the current entries unless major fields change.
-                // To keep it simple and working: We save updates, but DON'T touch entries array unless Amount/Type changes.
-                // IF the user edits description only, entries stay same.
-                if(updates.netAmount !== State.transactions[idx].netAmount || updates.accountType !== State.transactions[idx].accountType) {
-                     // Significant change detected - we really should recalculate.
-                     // For this demo, we'll just update the fields.
-                }
-            }
-        } catch(e) {
-             console.log("Smart Entry update failed, saving directly", e);
-        }
-
-        State.transactions[idx] = finalTx;
-        await State.save(); 
-    }
-    this.closeModal();
-}
-
-app.closeModal = function() {
-    const modal = document.getElementById('edit-modal');
-    if(modal) modal.classList.remove('active');
-}
-
-// Init
+// ─────────────────────────────────────────────
+// BOOT
+// ─────────────────────────────────────────────
 app.init();
 </script>
 </body>
 </html>
-
-

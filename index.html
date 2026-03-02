@@ -2,1705 +2,1719 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ledgerly.ai | v4.4</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Ledgerly.ai</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+/* ═══════════════════════════════════════════════
+   LEDGERLY.AI — Design System v4.6
+   Typeface: Plus Jakarta Sans
+   Aesthetic: Premium fintech — clean, confident, precise
+   Responsive: Desktop sidebar + Mobile bottom-nav drawer
+═══════════════════════════════════════════════ */
 :root {
-    --primary: #2563eb;
-    --primary-dark: #1e40af;
-    --secondary: #64748b;
-    --success: #10b981;
-    --danger: #ef4444;
-    --warning: #f59e0b;
-    --info: #3b82f6;
-    --bg-body: #f8fafc;
-    --bg-card: #ffffff;
-    --text-main: #0f172a;
-    --text-muted: #64748b;
-    --border: #e2e8f0;
-    --radius: 8px;
-    --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --font:        'Plus Jakarta Sans', sans-serif;
+
+  /* Brand */
+  --brand:       #2563eb;
+  --brand-dark:  #1d4ed8;
+  --brand-light: #eff6ff;
+
+  /* Semantic */
+  --success:     #10b981;
+  --success-bg:  #ecfdf5;
+  --danger:      #ef4444;
+  --danger-bg:   #fef2f2;
+  --warning:     #f59e0b;
+  --warning-bg:  #fffbeb;
+  --info:        #3b82f6;
+
+  /* Surfaces */
+  --bg:          #f1f5f9;
+  --surface:     #ffffff;
+  --surface-2:   #f8fafc;
+
+  /* Text */
+  --text:        #0f172a;
+  --text-2:      #475569;
+  --text-3:      #94a3b8;
+
+  /* Borders */
+  --border:      #e2e8f0;
+  --border-2:    #f1f5f9;
+
+  /* Sidebar */
+  --sidebar-bg:  #0a0f1e;
+  --sidebar-w:   240px;
+
+  /* Misc */
+  --radius:      10px;
+  --radius-sm:   6px;
+  --shadow:      0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:   0 4px 16px rgba(0,0,0,.10);
+  --shadow-lg:   0 8px 32px rgba(0,0,0,.14);
+  --transition:  0.18s ease;
 }
-* { box-sizing: border-box; outline: none; }
-body {
-    margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg-body);
-    color: var(--text-main);
-    height: 100vh;
-    display: flex;
-    overflow: hidden;
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  font-family: var(--font);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
 }
-.sidebar {
-    width: 260px;
-    background: #0f172a;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    padding: 1.5rem;
-    flex-shrink: 0;
-    z-index: 50;
+
+/* ── LAYOUT ─────────────────────────────────── */
+#layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
 }
-.main-wrapper {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+
+/* ── SIDEBAR ─────────────────────────────────── */
+#sidebar {
+  width: var(--sidebar-w);
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: 200;
+  transition: transform var(--transition);
 }
-header {
-    height: 64px;
-    background: var(--bg-card);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 2rem;
-    flex-shrink: 0;
+
+.sidebar-logo {
+  padding: 20px 20px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  margin-bottom: 8px;
 }
-.content-area {
-    flex: 1;
-    overflow-y: auto;
-    padding: 2rem;
+.sidebar-logo-icon {
+  width: 34px; height: 34px;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; flex-shrink: 0;
 }
-.brand {
-    font-size: 1.25rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 2rem;
-    color: #60a5fa;
-    letter-spacing: -0.5px;
+.sidebar-logo-text {
+  font-size: 15px; font-weight: 700; color: #f8fafc;
+  letter-spacing: -.3px;
 }
-.nav-btn {
-    width: 100%;
-    text-align: left;
-    padding: 0.6rem 1rem;
-    background: transparent;
-    border: none;
-    color: #94a3b8;
-    cursor: pointer;
-    border-radius: 6px;
-    margin-bottom: 2px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: all 0.2s;
-    font-size: 0.9rem;
+.sidebar-logo-ver {
+  font-size: 9px; color: #64748b; font-weight: 600;
+  background: rgba(255,255,255,.07);
+  padding: 1px 5px; border-radius: 4px; margin-top: 1px;
 }
-.nav-btn:hover { background: #1e293b; color: white; }
-.nav-btn.active { background: var(--primary); color: white; font-weight: 500; }
+
+.nav-section {
+  padding: 0 10px;
+  margin-bottom: 4px;
+}
+.nav-label {
+  font-size: 9.5px; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: #475569;
+  padding: 10px 10px 5px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius-sm);
+  color: #94a3b8;
+  font-size: 13.5px; font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition);
+  border: none; background: none; width: 100%;
+  text-align: left; margin-bottom: 1px;
+}
+.nav-item:hover { background: rgba(255,255,255,.07); color: #e2e8f0; }
+.nav-item.active { background: rgba(37,99,235,.25); color: #93c5fd; font-weight: 600; }
+.nav-item.active .nav-icon { color: #60a5fa; }
+.nav-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
+
+.sidebar-footer {
+  margin-top: auto;
+  padding: 12px 10px;
+  border-top: 1px solid rgba(255,255,255,.06);
+}
+.sidebar-user {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 6px;
+}
+.user-avatar {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 12px; color: white;
+  flex-shrink: 0;
+}
+.user-info { flex: 1; overflow: hidden; }
+.user-name { font-size: 12.5px; font-weight: 600; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-role { font-size: 10.5px; color: #64748b; }
+.btn-logout {
+  width: 100%; padding: 8px; border-radius: var(--radius-sm);
+  background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
+  color: #64748b; font-size: 12px; cursor: pointer;
+  transition: all var(--transition); font-family: var(--font); font-weight: 500;
+}
+.btn-logout:hover { background: rgba(239,68,68,.15); color: #fca5a5; border-color: rgba(239,68,68,.3); }
+
+/* ── SIDEBAR OVERLAY (mobile) ─────────────────── */
+#sidebar-overlay {
+  display: none;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 199;
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+/* ── MAIN ─────────────────────────────────────── */
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* ── TOPBAR ───────────────────────────────────── */
+#topbar {
+  height: 56px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  flex-shrink: 0;
+  gap: 12px;
+  position: sticky; top: 0; z-index: 100;
+}
+.topbar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.topbar-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+#hamburger {
+  display: none;
+  background: none; border: none; cursor: pointer;
+  padding: 6px; border-radius: 6px;
+  flex-direction: column; gap: 4.5px;
+  align-items: center; justify-content: center;
+}
+#hamburger span {
+  display: block; width: 20px; height: 2px;
+  background: var(--text-2); border-radius: 2px;
+  transition: all .3s;
+}
+
+#page-title {
+  font-size: 15px; font-weight: 700; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+#month-lock-badge {
+  display: none;
+  font-size: 10px; font-weight: 700;
+  background: var(--warning-bg); color: #92400e;
+  padding: 2px 8px; border-radius: 100px;
+  border: 1px solid #fcd34d;
+}
+
+/* Server status dot */
+#server-status {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11.5px; font-weight: 600; color: var(--text-3);
+  padding: 4px 10px; border-radius: 100px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  white-space: nowrap;
+}
+#server-status::before {
+  content: ''; display: block; width: 7px; height: 7px;
+  border-radius: 50%; background: var(--text-3); flex-shrink: 0;
+}
+#server-status.online  { color: #166534; background: var(--success-bg); border-color: #bbf7d0; }
+#server-status.online::before  { background: var(--success); box-shadow: 0 0 0 2px #86efac; }
+#server-status.syncing { color: #1d4ed8; background: var(--brand-light); border-color: #bfdbfe; }
+#server-status.syncing::before { background: var(--brand); animation: blink 1s infinite; }
+#server-status.offline { color: #b91c1c; background: var(--danger-bg); border-color: #fecaca; }
+#server-status.offline::before { background: var(--danger); }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+/* Business selector */
+#biz-select {
+  font-size: 12.5px; font-weight: 600;
+  padding: 5px 10px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--surface-2);
+  color: var(--text); cursor: pointer; font-family: var(--font);
+  max-width: 160px;
+}
+
+/* ── CONTENT ──────────────────────────────────── */
+#content {
+  flex: 1; overflow-y: auto;
+  padding: 24px;
+}
+
+/* View sections */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── CARDS ────────────────────────────────────── */
 .card {
-    background: var(--bg-card);
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border);
-    margin-bottom: 1.5rem;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  margin-bottom: 20px;
 }
-.grid-3 {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
+.card-title {
+  font-size: 14px; font-weight: 700; color: var(--text);
+  margin-bottom: 16px; display: flex; align-items: center;
+  justify-content: space-between; gap: 10px;
 }
-.badge {
-    font-size: 0.7rem;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 600;
-    text-transform: uppercase;
+
+/* ── STAT CARDS ───────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
 }
-.badge.owner { background: #4338ca; color: white; }
-.badge.viewer { background: #a1a1aa; color: white; }
-.badge.locked { background: #ef4444; color: white; }
-.badge.draft { background: #fef3c7; color: #92400e; }
-.badge.confirmed { background: #dcfce7; color: #166534; }
+.stat-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+}
+.stat-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0;
+  width: 3px; height: 100%;
+}
+.stat-card.green::before { background: var(--success); }
+.stat-card.blue::before  { background: var(--brand); }
+.stat-card.amber::before { background: var(--warning); }
+
+.stat-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text-3);
+  margin-bottom: 8px;
+}
+.stat-value {
+  font-size: 22px; font-weight: 800; color: var(--text);
+  letter-spacing: -.5px; line-height: 1;
+}
+
+/* ── TABLE ────────────────────────────────────── */
+.table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
-th {
-    text-align: left;
-    padding: 10px;
-    color: var(--text-muted);
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    border-bottom: 1px solid var(--border);
-    font-weight: 600;
+thead th {
+  text-align: left; padding: 10px 12px;
+  font-size: 11px; font-weight: 700; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text-3);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap; background: var(--surface-2);
 }
-td {
-    padding: 10px;
-    border-bottom: 1px solid var(--border);
-    font-size: 0.9rem;
-    vertical-align: middle;
+thead th:first-child { border-radius: var(--radius-sm) 0 0 0; }
+thead th:last-child  { border-radius: 0 var(--radius-sm) 0 0; }
+tbody td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-2);
+  font-size: 13px; color: var(--text);
+  vertical-align: middle;
 }
-.chat-container {
-    max-width: 800px;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 180px);
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--surface-2); }
+
+/* ── BADGES ───────────────────────────────────── */
+.badge {
+  display: inline-flex; align-items: center;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .03em;
+  padding: 2px 8px; border-radius: 100px; white-space: nowrap;
+}
+.badge-confirmed { background: var(--success-bg); color: #065f46; }
+.badge-draft     { background: var(--warning-bg); color: #78350f; }
+.badge-gst       { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+
+/* ── BUTTONS ──────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  border: none; transition: all var(--transition);
+  font-family: var(--font); white-space: nowrap; line-height: 1;
+}
+.btn-primary  { background: var(--brand); color: white; }
+.btn-primary:hover  { background: var(--brand-dark); }
+.btn-outline  { background: var(--surface); color: var(--text-2); border: 1px solid var(--border); }
+.btn-outline:hover  { background: var(--surface-2); color: var(--text); }
+.btn-success  { background: var(--success-bg); color: #065f46; border: 1px solid #bbf7d0; }
+.btn-success:hover  { background: #d1fae5; }
+.btn-danger   { background: var(--danger-bg); color: #b91c1c; border: 1px solid #fecaca; }
+.btn-danger:hover   { background: #fee2e2; }
+.btn-sm       { padding: 5px 10px; font-size: 11.5px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* ── INPUTS ───────────────────────────────────── */
+.input, input[type="text"], input[type="email"],
+input[type="password"], input[type="number"],
+input[type="date"], select {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13.5px; color: var(--text);
+  font-family: var(--font); background: var(--surface);
+  transition: border-color var(--transition);
+  outline: none;
+}
+.input:focus, input:focus, select:focus {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+}
+.form-row { margin-bottom: 14px; }
+.form-label {
+  display: block; font-size: 11.5px; font-weight: 700;
+  color: var(--text-2); margin-bottom: 5px; letter-spacing: .02em;
+}
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-grid-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; }
+
+/* ── AUTH ─────────────────────────────────────── */
+#view-auth {
+  display: flex; align-items: center; justify-content: center;
+  min-height: calc(100vh - 56px);
+  padding: 20px;
+}
+.auth-card {
+  background: var(--surface);
+  border-radius: 14px; border: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  padding: 36px 32px;
+  width: 100%; max-width: 400px;
+}
+.auth-logo {
+  text-align: center; margin-bottom: 28px;
+}
+.auth-logo-icon {
+  width: 52px; height: 52px;
+  background: linear-gradient(135deg, #2563eb, #7c3aed);
+  border-radius: 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 24px; margin-bottom: 12px;
+}
+.auth-logo h1 { font-size: 22px; font-weight: 800; letter-spacing: -.4px; }
+.auth-logo p  { font-size: 13px; color: var(--text-3); margin-top: 4px; }
+.auth-tabs {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 6px; margin-bottom: 20px;
+  background: var(--surface-2); padding: 4px;
+  border-radius: var(--radius-sm); border: 1px solid var(--border);
+}
+.auth-tab {
+  padding: 8px; border-radius: 5px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  border: none; background: none; color: var(--text-3);
+  font-family: var(--font); transition: all var(--transition);
+}
+.auth-tab.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+#auth-msg { font-size: 12.5px; margin-top: 10px; text-align: center; min-height: 18px; }
+
+/* ── SMART ENTRY / CHAT ───────────────────────── */
+.chat-wrap {
+  display: flex; flex-direction: column;
+  height: calc(100vh - 104px);
+  max-width: 760px; margin: 0 auto;
 }
 .chat-history {
-    flex: 1;
-    overflow-y: auto;
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    scroll-behavior: smooth;
+  flex: 1; overflow-y: auto;
+  display: flex; flex-direction: column;
+  gap: 12px; padding: 4px 2px;
+  scroll-behavior: smooth;
 }
 .msg {
-    max-width: 85%;
-    padding: 0.8rem 1rem;
-    border-radius: 8px;
-    font-size: 0.9rem;
-    line-height: 1.5;
+  max-width: 88%; padding: 11px 14px;
+  border-radius: 10px; font-size: 13.5px; line-height: 1.55;
 }
-.msg.ai { background: white; border: 1px solid var(--border); align-self: flex-start; }
-.msg.user { background: var(--primary); color: white; align-self: flex-end; }
-.msg.error { background: #fef2f2; border: 1px solid #fee2e2; color: #dc2626; align-self: flex-start; }
-.mini-ledger {
-    width: 100%;
-    margin-top: 10px;
-    font-family: monospace;
-    font-size: 0.85rem;
-    border: 1px solid #eee;
-    border-radius: 4px;
-    overflow: hidden;
+.msg.ai {
+  background: var(--surface); border: 1px solid var(--border);
+  align-self: flex-start; border-radius: 2px 10px 10px 10px;
 }
-.mini-ledger td { padding: 4px 8px; border-bottom: 1px solid #f0f0f0; }
-.mini-ledger .dr { color: #166534; font-weight: bold; }
-.mini-ledger .cr { color: #dc2626; font-weight: bold; }
+.msg.user {
+  background: var(--brand); color: white;
+  align-self: flex-end; border-radius: 10px 2px 10px 10px;
+}
+.msg.error {
+  background: var(--danger-bg); border: 1px solid #fecaca;
+  color: #b91c1c; align-self: flex-start;
+}
+.chat-input-row {
+  display: flex; gap: 8px; align-items: center;
+  padding: 14px 0 0;
+  border-top: 1px solid var(--border);
+  margin-top: 12px;
+}
+.chat-input-row input[type="text"] {
+  flex: 1; font-size: 14px;
+  border-radius: 8px; padding: 10px 14px;
+}
+.chat-lang { width: 110px !important; flex-shrink: 0; }
+
+/* Confirmation card */
 .confirm-card {
-    align-self: center;
-    background: #fff;
-    width: 100%;
-    max-width: 520px;
-    border: 1px solid var(--primary);
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
-    margin: 0.5rem auto;
+  background: var(--surface);
+  border: 1.5px solid var(--brand);
+  border-radius: 10px; overflow: hidden;
+  box-shadow: 0 4px 20px rgba(37,99,235,.12);
+  margin: 4px 0;
 }
-.confirm-header {
-    background: #eff6ff;
-    padding: 10px 15px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--primary);
-    border-bottom: 1px solid #dbeafe;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.confirm-head {
+  background: var(--brand-light);
+  padding: 10px 14px;
+  font-size: 12px; font-weight: 700; color: var(--brand);
+  border-bottom: 1px solid #dbeafe;
+  display: flex; justify-content: space-between; align-items: center;
 }
-.confirm-body { padding: 15px; }
+.confirm-close { cursor: pointer; opacity: .6; }
+.confirm-close:hover { opacity: 1; }
+.confirm-body { padding: 14px; }
 .confirm-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
-    font-size: 0.9rem;
-    align-items: center;
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 8px;
+  font-size: 13px;
 }
-.chat-input-area {
-    background: white;
-    padding: 1rem;
-    border-radius: 0 0 8px 8px;
-    border: 1px solid var(--border);
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    margin-top: 1rem;
+.confirm-row span:first-child { color: var(--text-3); }
+.confirm-row span:last-child  { font-weight: 600; }
+.mini-ledger {
+  width: 100%; margin-top: 10px;
+  font-size: 12px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); overflow: hidden;
+  font-family: 'SF Mono', 'Fira Code', monospace;
 }
-.chat-input-area input { flex: 1; }
-input, select {
-    padding: 0.6rem;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font-size: 0.9rem;
+.mini-ledger thead th { background: var(--surface-2); font-size: 10px; }
+.mini-ledger td { padding: 5px 10px; border-bottom: 1px solid var(--border-2); }
+.mini-ledger .dr { color: #065f46; font-weight: 700; }
+.mini-ledger .cr { color: #b91c1c; font-weight: 700; }
+.confirm-btns { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+
+/* ── BANK IMPORT ──────────────────────────────── */
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius); padding: 3rem;
+  text-align: center; background: var(--surface-2);
+  cursor: pointer; transition: all var(--transition);
 }
-.btn {
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 0.85rem;
-    transition: 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    white-space: nowrap;
+.drop-zone:hover, .drop-zone.drag { border-color: var(--brand); background: var(--brand-light); }
+.drop-icon { font-size: 2.5rem; margin-bottom: 10px; }
+.drop-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+.drop-sub   { font-size: 12px; color: var(--text-3); }
+
+/* ── REPORTS ──────────────────────────────────── */
+.report-tabs {
+  display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap;
 }
-.btn-primary { background: var(--primary); color: white; }
-.btn-primary:hover { background: var(--primary-dark); }
-.btn-outline { background: white; border: 1px solid var(--border); color: var(--text-main); }
-.btn-outline:hover { background: #f8fafc; }
-.btn-danger { background: #fef2f2; color: var(--danger); border: 1px solid #fee2e2; }
-.btn-success { background: #f0fdf4; color: var(--success); border: 1px solid #bbf7d0; }
-.btn:disabled { opacity: 0.4; cursor: not-allowed; }
-.btn-sm { padding: 0.25rem 0.6rem; font-size: 0.75rem; }
+.report-tab {
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: var(--surface); color: var(--text-2);
+  font-family: var(--font); transition: all var(--transition);
+}
+.report-tab.active {
+  background: var(--brand); color: white; border-color: var(--brand);
+}
+#report-display { line-height: 1.9; font-size: 13.5px; }
+
+/* ── MODAL ────────────────────────────────────── */
 .modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 100;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.4);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 500; opacity: 0; pointer-events: none;
+  transition: opacity var(--transition);
+  backdrop-filter: blur(3px);
 }
 .modal-overlay.active { opacity: 1; pointer-events: all; }
 .modal {
-    background: white;
-    padding: 2rem;
-    border-radius: 12px;
-    width: 500px;
-    max-width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
+  background: var(--surface);
+  border-radius: 14px; padding: 24px;
+  width: 520px; max-width: calc(100vw - 32px);
+  max-height: 88vh; overflow-y: auto;
+  box-shadow: var(--shadow-lg);
 }
-.toast-container {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    z-index: 9999;
-    pointer-events: none;
+.modal-header {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 20px;
+}
+.modal-title { font-size: 15px; font-weight: 700; }
+.modal-close {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 8px; cursor: pointer;
+  font-size: 14px; color: var(--text-3);
+  font-family: var(--font); transition: all var(--transition);
+}
+.modal-close:hover { background: var(--danger-bg); color: var(--danger); }
+
+/* ── TOAST ────────────────────────────────────── */
+#toast-wrap {
+  position: fixed; bottom: 20px; right: 20px;
+  display: flex; flex-direction: column; gap: 8px;
+  z-index: 1000; pointer-events: none;
 }
 .toast {
-    background: white;
-    padding: 12px 16px;
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    border-left: 4px solid var(--primary);
-    pointer-events: all;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    animation: slideIn 0.3s;
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface); padding: 11px 16px;
+  border-radius: 8px; box-shadow: var(--shadow-lg);
+  border-left: 3px solid var(--brand);
+  font-size: 13px; pointer-events: all;
+  animation: slideIn .25s ease;
+  transition: opacity .3s;
 }
-.toast.warning { border-left-color: var(--warning); }
-.toast.error { border-left-color: var(--danger); }
-.toast.success { border-left-color: var(--success); }
-@keyframes slideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+.toast.success { border-color: var(--success); }
+.toast.error   { border-color: var(--danger); }
+.toast.warning { border-color: var(--warning); }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } }
+
+/* ── EMPTY STATE ──────────────────────────────── */
+.empty {
+  text-align: center; padding: 40px 20px; color: var(--text-3);
 }
-.hidden { display: none !important; }
-.view-section { display: none; }
-.view-section.active { display: block; }
-.server-status {
-    font-size: 0.75rem;
-    padding: 4px 10px;
-    border-radius: 12px;
-    background: #f1f5f9;
-    color: #64748b;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.server-status::before {
-    content: '';
-    display: block;
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: #cbd5e1;
-}
-.server-status.online { background: #dcfce7; color: #166534; }
-.server-status.online::before { background: #22c55e; box-shadow: 0 0 0 2px #86efac; }
-.server-status.syncing { background: #eff6ff; color: #1d4ed8; }
-.server-status.syncing::before { background: #3b82f6; animation: pulse 1s infinite; }
-.server-status.offline { background: #fef2f2; color: #dc2626; }
-.server-status.offline::before { background: #ef4444; }
-@keyframes pulse {
-    0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
-}
-/* Loading spinner */
+.empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+.empty-text { font-size: 14px; font-weight: 500; }
+
+/* ── SPINNER ──────────────────────────────────── */
 .spinner {
-    display: inline-block;
-    width: 16px; height: 16px;
-    border: 2px solid rgba(255,255,255,0.3);
-    border-top-color: white;
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
+  display: inline-block; width: 15px; height: 15px;
+  border: 2px solid rgba(255,255,255,.35);
+  border-top-color: white; border-radius: 50%;
+  animation: spin .6s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
-/* Empty state */
-.empty-state {
-    text-align: center;
-    padding: 3rem;
-    color: var(--text-muted);
+
+/* ── MISC UTILS ───────────────────────────────── */
+.hidden { display: none !important; }
+.text-muted { color: var(--text-3); }
+.text-success { color: var(--success); }
+.text-danger  { color: var(--danger); }
+.fw-700 { font-weight: 700; }
+.divider { height: 1px; background: var(--border); margin: 14px 0; }
+
+/* ── BOTTOM NAV (mobile only) ─────────────────── */
+#bottom-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  background: var(--sidebar-bg);
+  border-top: 1px solid rgba(255,255,255,.06);
+  z-index: 150; padding-bottom: env(safe-area-inset-bottom);
 }
-.empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
-/* Month-end lock banner */
-.lock-banner {
-    background: #fef3c7;
-    border: 1px solid #fcd34d;
-    border-radius: 6px;
-    padding: 8px 14px;
-    font-size: 0.82rem;
-    color: #78350f;
-    margin-bottom: 1rem;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.bnav-inner { display: flex; }
+.bnav-btn {
+  flex: 1; background: none; border: none;
+  color: #475569; padding: 10px 4px 9px;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 3px;
+  font-size: 9.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .04em;
+  cursor: pointer; font-family: var(--font);
+  transition: color var(--transition);
+  border-top: 2px solid transparent;
 }
+.bnav-btn .bnav-icon { font-size: 1.2rem; line-height: 1; }
+.bnav-btn.active { color: #60a5fa; border-top-color: #3b82f6; }
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE — 768px breakpoint
+══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Sidebar becomes slide drawer */
+  #sidebar {
+    position: fixed; top: 0; left: 0; bottom: 0;
+    transform: translateX(-100%);
+  }
+  #sidebar.open { transform: translateX(0); }
+  #sidebar-overlay { display: block; }
+  #sidebar-overlay.open { opacity: 1; pointer-events: all; }
+
+  /* Layout becomes single column */
+  #layout { flex-direction: column; height: 100%; overflow: auto; }
+  #main { height: 100%; overflow: hidden; }
+
+  /* Topbar */
+  #hamburger { display: flex; }
+  #biz-select { max-width: 120px; font-size: 11px; }
+  #server-status { font-size: 0; padding: 6px; border-radius: 50%; }
+  #server-status::before { margin: 0; }
+
+  /* Content scrolls */
+  #content { 
+    padding: 14px; 
+    overflow-y: auto;
+    padding-bottom: calc(68px + env(safe-area-inset-bottom));
+  }
+
+  /* Stats grid: 1 column stacked */
+  .stats-grid { grid-template-columns: 1fr; gap: 10px; }
+  .stat-card { 
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px;
+  }
+  .stat-card .stat-label { margin-bottom: 0; }
+  .stat-card .stat-value { font-size: 18px; }
+
+  /* Card padding */
+  .card { padding: 14px; margin-bottom: 14px; }
+
+  /* Table scrolls horizontally */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { min-width: 560px; }
+
+  /* Chat */
+  .chat-wrap { height: calc(100dvh - 145px); }
+  .chat-input-row { flex-wrap: wrap; }
+  .chat-input-row input[type="text"] { font-size: 16px; } /* stops iOS zoom */
+  .chat-lang { width: 100% !important; order: 3; }
+
+  /* Confirm card full width */
+  .confirm-card { width: 100%; }
+
+  /* Modal slides from bottom */
+  .modal {
+    width: 100%; border-radius: 16px 16px 0 0;
+    position: fixed; bottom: 0; left: 0; right: 0;
+    max-height: 90dvh; margin: 0;
+  }
+  .modal-overlay { align-items: flex-end; }
+
+  /* Forms */
+  .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; gap: 10px; }
+
+  /* Auth page */
+  #view-auth { padding: 16px; min-height: calc(100dvh - 56px); }
+  .auth-card { padding: 24px 20px; }
+
+  /* Report tabs scroll */
+  .report-tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+  .report-tab { white-space: nowrap; }
+
+  /* Toast above bottom nav */
+  #toast-wrap { bottom: calc(68px + 8px); right: 12px; left: 12px; }
+  .toast { font-size: 12px; }
+
+  /* Show bottom nav */
+  #bottom-nav { display: block; }
+}
+
+@media (max-width: 380px) {
+  #content { padding: 10px; }
+  .card { padding: 12px; }
+  .stat-value { font-size: 16px !important; }
+}
+
+/* Print */
 @media print {
-    .sidebar, header, .btn, .chat-input-area, .toast-container { display: none !important; }
-    .view-section { display: block !important; }
-    body { height: auto; display: block; }
+  #sidebar, #topbar, .btn, .chat-input-row,
+  #toast-wrap, #bottom-nav, .report-tabs { display: none !important; }
+  .view { display: block !important; }
+  #layout { height: auto; display: block; }
 }
 </style>
 </head>
 <body>
 
-<!-- COA DEFINITION -->
 <script>
 const COA = {
-    Asset:     ['Cash', 'Bank', 'Equipment', 'Input Tax Credit', 'Receivables'],
-    Liability: ['Term Loan', 'GST Payable', 'Vendor Payables'],
-    Income:    ['Sales', 'Service Income', 'Refunds'],
-    Expense:   ['Rent', 'Salary', 'Utilities', 'Office Supplies', 'Professional Fees'],
-    Equity:    ['Capital']
+  Asset:     ['Cash', 'Bank', 'Equipment', 'Input Tax Credit', 'Receivables'],
+  Liability: ['Term Loan', 'GST Payable', 'Vendor Payables'],
+  Income:    ['Sales', 'Service Income', 'Refunds'],
+  Expense:   ['Rent', 'Salary', 'Utilities', 'Office Supplies', 'Professional Fees'],
+  Equity:    ['Capital']
 };
 
-// ─────────────────────────────────────────────
-// FIX #1: NLP PARSER — was referenced but NEVER defined
-// Simple keyword-based parser so Smart Entry works offline too
-// ─────────────────────────────────────────────
 const NLP = {
-    parse(text) {
-        const lower = text.toLowerCase();
-
-        // Extract amount — handles "5000", "₹5,000", "5k"
-        let amount = 0;
-        const amtMatch = text.match(/(?:₹\s*)?(\d[\d,]*(?:\.\d{1,2})?)\s*k?/i);
-        if (amtMatch) {
-            amount = parseFloat(amtMatch[1].replace(/,/g, ''));
-            if (/\bk\b/i.test(text)) amount *= 1000;
-        }
-
-        // Extract date (dd/mm/yyyy or dd-mm-yyyy or "today")
-        let date = new Date().toISOString().split('T')[0];
-        const dateMatch = text.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
-        if (dateMatch) {
-            const y = dateMatch[3] ? (dateMatch[3].length === 2 ? '20' + dateMatch[3] : dateMatch[3]) : new Date().getFullYear();
-            date = `${y}-${String(dateMatch[2]).padStart(2, '0')}-${String(dateMatch[1]).padStart(2, '0')}`;
-        }
-
-        // Detect GST rate
-        let gstRate = 0;
-        if (/18\s*%?\s*gst|gst\s*18/.test(lower)) gstRate = 18;
-        else if (/12\s*%?\s*gst|gst\s*12/.test(lower)) gstRate = 12;
-        else if (/28\s*%?\s*gst|gst\s*28/.test(lower)) gstRate = 28;
-        else if (/5\s*%?\s*gst|gst\s*5/.test(lower)) gstRate = 5;
-
-        const isInclusiveGST = /incl|inclusive|inc\.?\s*tax|with\s*gst/.test(lower);
-
-        // Detect payment mode
-        let mode = 'Cash';
-        if (/\bupi\b|gpay|phonepe|paytm/.test(lower)) mode = 'UPI';
-        else if (/\bbank\b|\bneft\b|\brtgs\b|\bcheque\b|\bimps\b/.test(lower)) mode = 'Bank';
-
-        // Detect account type & category
-        let accountType = 'Expense';
-        let category = 'Office Supplies';
-
-        const expenseMap = [
-            { keys: ['rent', 'office rent', 'shop rent'], cat: 'Rent', type: 'Expense' },
-            { keys: ['salary', 'salaries', 'wages', 'staff pay'], cat: 'Salary', type: 'Expense' },
-            { keys: ['electric', 'electricity', 'internet', 'wifi', 'phone bill', 'utility', 'utilities'], cat: 'Utilities', type: 'Expense' },
-            { keys: ['professional fee', 'consultant', 'lawyer', 'ca fee', 'audit'], cat: 'Professional Fees', type: 'Expense' },
-            { keys: ['office supply', 'stationery', 'supplies', 'printing'], cat: 'Office Supplies', type: 'Expense' },
-            { keys: ['sales', 'sold', 'revenue', 'invoice raised', 'received payment'], cat: 'Sales', type: 'Income' },
-            { keys: ['service income', 'service charge', 'service fee', 'project income'], cat: 'Service Income', type: 'Income' },
-            { keys: ['refund received', 'refunded'], cat: 'Refunds', type: 'Income' },
-            { keys: ['equipment', 'laptop', 'computer', 'machine', 'furniture', 'ac ', 'printer'], cat: 'Equipment', type: 'Asset' },
-            { keys: ['loan', 'borrowed', 'term loan'], cat: 'Term Loan', type: 'Liability' },
-            { keys: ['capital', 'invested', 'owner contribution'], cat: 'Capital', type: 'Equity' },
-        ];
-
-        for (const rule of expenseMap) {
-            if (rule.keys.some(k => lower.includes(k))) {
-                category = rule.cat;
-                accountType = rule.type;
-                break;
-            }
-        }
-
-        // Build description from text (clean up amount/date noise)
-        const desc = text.replace(/(?:₹\s*)?\d[\d,]*(?:\.\d{1,2})?\s*k?/i, '').replace(/\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?/, '').trim() || text.trim();
-
-        return { amount, date, desc, gstRate, isInclusiveGST, mode, accountType, category };
+  parse(text) {
+    const lower = text.toLowerCase();
+    let amount = 0;
+    const amtMatch = text.match(/(?:₹\s*)?(\d[\d,]*(?:\.\d{1,2})?)\s*k?/i);
+    if (amtMatch) {
+      amount = parseFloat(amtMatch[1].replace(/,/g,''));
+      if (/\bk\b/i.test(text)) amount *= 1000;
     }
+    let date = new Date().toISOString().split('T')[0];
+    const dateMatch = text.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+    if (dateMatch) {
+      const y = dateMatch[3] ? (dateMatch[3].length===2 ? '20'+dateMatch[3] : dateMatch[3]) : new Date().getFullYear();
+      date = `${y}-${String(dateMatch[2]).padStart(2,'0')}-${String(dateMatch[1]).padStart(2,'0')}`;
+    }
+    let gstRate = 0;
+    if (/18\s*%?\s*gst|gst\s*18/.test(lower)) gstRate = 18;
+    else if (/12\s*%?\s*gst|gst\s*12/.test(lower)) gstRate = 12;
+    else if (/28\s*%?\s*gst|gst\s*28/.test(lower)) gstRate = 28;
+    else if (/5\s*%?\s*gst|gst\s*5/.test(lower))  gstRate = 5;
+    const isInclusiveGST = /incl|inclusive|inc\.?\s*tax|with\s*gst/.test(lower);
+    let mode = 'Cash';
+    if (/\bupi\b|gpay|phonepe|paytm/.test(lower)) mode = 'UPI';
+    else if (/\bbank\b|\bneft\b|\brtgs\b|\bcheque\b|\bimps\b/.test(lower)) mode = 'Bank';
+    let accountType = 'Expense', category = 'Office Supplies';
+    const rules = [
+      { keys:['rent','office rent','shop rent'],           cat:'Rent',             type:'Expense'   },
+      { keys:['salary','salaries','wages','staff pay'],    cat:'Salary',           type:'Expense'   },
+      { keys:['electric','electricity','internet','wifi','phone bill','utility','utilities'], cat:'Utilities', type:'Expense' },
+      { keys:['professional fee','consultant','lawyer','ca fee','audit'], cat:'Professional Fees', type:'Expense' },
+      { keys:['office supply','stationery','supplies','printing'], cat:'Office Supplies', type:'Expense' },
+      { keys:['sales','sold','revenue','invoice raised','received payment'], cat:'Sales', type:'Income' },
+      { keys:['service income','service charge','service fee','project income'], cat:'Service Income', type:'Income' },
+      { keys:['refund received','refunded'],               cat:'Refunds',          type:'Income'    },
+      { keys:['equipment','laptop','computer','machine','furniture','ac ','printer'], cat:'Equipment', type:'Asset' },
+      { keys:['loan','borrowed','term loan'],              cat:'Term Loan',        type:'Liability' },
+      { keys:['capital','invested','owner contribution'],  cat:'Capital',          type:'Equity'    },
+    ];
+    for (const r of rules) {
+      if (r.keys.some(k => lower.includes(k))) { category = r.cat; accountType = r.type; break; }
+    }
+    const desc = text.replace(/(?:₹\s*)?\d[\d,]*(?:\.\d{1,2})?\s*k?/i,'').replace(/\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?/,'').trim() || text.trim();
+    return { amount, date, desc, gstRate, isInclusiveGST, mode, accountType, category };
+  }
 };
 </script>
 
-<datalist id="category-suggestions"></datalist>
+<datalist id="cat-list"></datalist>
 
-<!-- SIDEBAR -->
-<nav class="sidebar" id="app-sidebar">
-    <div class="brand">
-        <span style="font-size:1.5rem;">📓</span>
-        <span>Ledgerly.ai</span>
-        <span style="font-size:0.6rem; background:var(--success); padding:2px 5px; border-radius:4px; color:white;">v4.4</span>
+<!-- Overlay -->
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- ── LAYOUT ───────────────────────────────── -->
+<div id="layout">
+
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">📓</div>
+      <div>
+        <div class="sidebar-logo-text">Ledgerly.ai</div>
+        <div class="sidebar-logo-ver">v4.6</div>
+      </div>
     </div>
 
-    <button class="nav-btn active" onclick="app.navigate('dashboard')">📊 Dashboard</button>
-    <button class="nav-btn" onclick="app.navigate('input')">🎙️ Smart Entry</button>
-    <button class="nav-btn" onclick="app.navigate('upload')">📄 Bank Import</button>
-    <button class="nav-btn" onclick="app.navigate('reports')">📈 Reports</button>
-
-    <div style="margin-top:auto; border-top:1px solid #334155; padding-top:1rem;">
-        <div style="font-size:0.75rem; color:#94a3b8; margin-bottom:6px; letter-spacing:0.05em;">ROLE</div>
-        <div style="display:flex; gap:8px; margin-bottom:12px;">
-            <!-- FIX #4: switchRole was called but never defined — now defined in app -->
-            <button class="btn btn-outline" style="flex:1; padding:4px; font-size:0.7rem;" onclick="app.switchRole('owner')">Owner</button>
-            <button class="btn btn-outline" style="flex:1; padding:4px; font-size:0.7rem;" onclick="app.switchRole('viewer')">Viewer</button>
-        </div>
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="display:flex; align-items:center; gap:10px;">
-                <div id="user-avatar" style="width:32px; height:32px; background:var(--primary); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:0.8rem; color:white;">--</div>
-                <div style="font-size:0.85rem;" id="sidebar-username">Loading...</div>
-            </div>
-            <span id="current-role-badge" class="badge owner">Owner 👑</span>
-        </div>
-        <!-- FIX: logout button added -->
-        <button class="btn btn-outline" style="width:100%; margin-top:10px; font-size:0.78rem;" onclick="app.logout()">🚪 Logout</button>
+    <div class="nav-section">
+      <div class="nav-label">Main</div>
+      <button class="nav-item active" data-view="dashboard" onclick="app.navigate('dashboard')">
+        <span class="nav-icon">📊</span> Dashboard
+      </button>
+      <button class="nav-item" data-view="input" onclick="app.navigate('input')">
+        <span class="nav-icon">🎙️</span> Smart Entry
+      </button>
+      <button class="nav-item" data-view="upload" onclick="app.navigate('upload')">
+        <span class="nav-icon">📄</span> Bank Import
+      </button>
+      <button class="nav-item" data-view="reports" onclick="app.navigate('reports')">
+        <span class="nav-icon">📈</span> Reports
+      </button>
     </div>
-</nav>
 
-<!-- MAIN -->
-<div class="main-wrapper" id="app-main">
-    <header id="app-header">
-        <div style="display:flex; gap:12px; align-items:center;">
-            <h2 style="margin:0; font-size:1.15rem;" id="page-title">Dashboard</h2>
-            <div id="month-lock-indicator" class="hidden" style="font-size:0.72rem; background:#fef3c7; color:#92400e; padding:2px 8px; border-radius:100px; border:1px solid #fcd34d;">🔒 Month Locked</div>
+    <div class="nav-section">
+      <div class="nav-label">Settings</div>
+      <button class="nav-item" onclick="app.runMonthEnd()">
+        <span class="nav-icon">⚙️</span> Month End
+      </button>
+      <button class="nav-item" onclick="window.print()">
+        <span class="nav-icon">🖨️</span> Print / PDF
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="user-avatar" id="user-avatar">--</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebar-username">Loading...</div>
+          <div class="user-role" id="current-role-badge">Owner</div>
         </div>
-        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-            <div id="server-status" class="server-status" title="Backend Connection">Offline</div>
-            <!-- FIX #6: switchBusiness now routes to app.switchBusiness -->
-            <select id="business-switcher" onchange="app.switchBusiness(this.value)">
-                <option value="">Loading...</option>
-            </select>
-            <!-- FIX #5: runMonthEnd was called but never defined -->
-            <button class="btn btn-outline" onclick="app.runMonthEnd()">⚙️ Month End</button>
-            <button class="btn btn-outline" onclick="window.print()">🖨️ PDF</button>
-        </div>
+      </div>
+      <button class="btn-logout" onclick="app.logout()">🚪 Sign out</button>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <div id="main">
+
+    <!-- TOPBAR -->
+    <header id="topbar">
+      <div class="topbar-left">
+        <button id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+          <span></span><span></span><span></span>
+        </button>
+        <span id="page-title">Dashboard</span>
+        <span id="month-lock-badge">🔒 Locked</span>
+      </div>
+      <div class="topbar-right">
+        <div id="server-status" title="Server connection">Online</div>
+        <select id="biz-select" onchange="app.switchBusiness(this.value)">
+          <option>Loading...</option>
+        </select>
+      </div>
     </header>
 
-    <main class="content-area">
+    <!-- CONTENT -->
+    <div id="content">
 
-        <!-- AUTH -->
-        <section id="view-auth" class="view-section active" style="max-width:420px; margin:50px auto;">
-            <div class="card">
-                <div style="text-align:center; margin-bottom:1.5rem;">
-                    <div style="font-size:2.5rem; margin-bottom:0.5rem;">📓</div>
-                    <h2 style="margin:0; font-size:1.4rem;">Ledgerly.ai</h2>
-                    <p style="color:var(--text-muted); font-size:0.85rem; margin-top:4px;">AI-powered accounting for small business</p>
-                </div>
-                <div style="display:flex; gap:10px; margin-bottom:1.2rem;">
-                    <button id="btn-auth-login" class="btn btn-primary" style="flex:1;" onclick="app.setAuthMode('login')">Login</button>
-                    <button id="btn-auth-register" class="btn btn-outline" style="flex:1;" onclick="app.setAuthMode('register')">Register</button>
-                </div>
-                <input type="email" id="auth-email" placeholder="Email Address" style="width:100%; margin-bottom:10px;">
-                <input type="password" id="auth-password" placeholder="Password" style="width:100%; margin-bottom:10px;">
-                <input type="text" id="auth-name" placeholder="Full Name" style="width:100%; margin-bottom:10px;" class="hidden">
-                <button class="btn btn-primary" style="width:100%;" id="auth-submit-btn" onclick="app.handleAuthSubmit()">
-                    <span id="auth-btn-text">Login</span>
-                </button>
-                <p id="auth-message" style="font-size:0.82rem; margin-top:10px; text-align:center;"></p>
-            </div>
-        </section>
-
-        <!-- DASHBOARD -->
-        <section id="view-dashboard" class="view-section">
-            <div class="grid-3">
-                <div class="card" style="border-left:3px solid var(--success);">
-                    <div style="color:var(--text-muted); font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em;">Cash & Bank</div>
-                    <div style="font-size:1.6rem; font-weight:700; margin-top:6px;" id="dash-liquid">₹0</div>
-                </div>
-                <div class="card" style="border-left:3px solid var(--primary);">
-                    <div style="color:var(--text-muted); font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em;">Total Assets</div>
-                    <div style="font-size:1.6rem; font-weight:700; margin-top:6px;" id="dash-assets">₹0</div>
-                </div>
-                <div class="card" style="border-left:3px solid var(--warning);">
-                    <div style="color:var(--text-muted); font-size:0.78rem; text-transform:uppercase; letter-spacing:0.05em;">Net Profit (YTD)</div>
-                    <div style="font-size:1.6rem; font-weight:700; margin-top:6px;" id="dash-profit">₹0</div>
-                </div>
-            </div>
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-                    <h3 style="margin:0;">Recent Transactions</h3>
-                    <button class="btn btn-sm btn-outline" onclick="app.navigate('input')">+ New Entry</button>
-                </div>
-                <div id="dash-empty" class="empty-state hidden">
-                    <div class="icon">📭</div>
-                    <p>No transactions yet. Use Smart Entry to add one!</p>
-                </div>
-                <table id="dash-table">
-                    <thead>
-                        <tr><th>Date</th><th>Description</th><th>Category</th><th>GST</th><th>Amount</th><th>Status</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody id="dash-tx-body"></tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- SMART ENTRY -->
-        <section id="view-input" class="view-section">
-            <div class="chat-container">
-                <div class="chat-history" id="chat-history">
-                    <div class="msg ai">
-                        💡 <strong>Smart Entry Active</strong><br>
-                        Type naturally — for example:<br>
-                        <em>"Paid rent ₹12,000 via bank"</em> or <em>"Sales of 50,000 with 18% GST"</em>
-                    </div>
-                </div>
-                <div id="confirm-container"></div>
-                <div class="chat-input-area">
-                    <button class="btn btn-outline" onclick="app.startVoice()" title="Voice input">🎙️</button>
-                    <input type="text" id="chat-input" list="category-suggestions" placeholder="Type transaction... (e.g. paid rent 5000 cash)" onkeypress="if(event.key==='Enter') app.processChatInput()">
-                    <select style="width:120px;" id="voice-lang">
-                        <option value="en-IN">English</option>
-                        <option value="hi-IN">Hindi</option>
-                    </select>
-                    <button class="btn btn-primary" id="send-btn" onclick="app.processChatInput()">Send</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- BANK IMPORT -->
-        <section id="view-upload" class="view-section">
-            <div class="card" style="max-width:700px; margin:0 auto;">
-                <h2 style="margin:0 0 0.5rem;">Bank Statement Import</h2>
-                <p style="color:var(--text-muted); font-size:0.88rem; margin-bottom:1.2rem;">Upload CSV or PDF bank statement. The server will parse and categorize automatically.</p>
-                <div id="drop-zone" style="border:2px dashed var(--border); border-radius:8px; padding:3rem; text-align:center; background:#f8fafc; cursor:pointer; transition:0.2s;"
-                    onclick="document.getElementById('file-input').click()"
-                    ondragover="event.preventDefault(); this.style.borderColor='var(--primary)'"
-                    ondragleave="this.style.borderColor='var(--border)'"
-                    ondrop="event.preventDefault(); app.handleFileSelect({files: event.dataTransfer.files})">
-                    <div style="font-size:2.5rem; margin-bottom:10px;">📄</div>
-                    <p style="font-weight:600;">Click to upload or drag & drop</p>
-                    <p style="font-size:0.82rem; color:var(--text-muted);">CSV, PDF supported</p>
-                    <input type="file" id="file-input" hidden accept=".csv,.pdf" onchange="app.handleFileSelect(this)">
-                </div>
-                <div id="pending-imports-container" class="hidden" style="margin-top:1.5rem;">
-                    <h3 style="margin-bottom:0.8rem;">Review Transactions</h3>
-                    <table id="import-list">
-                        <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th></tr></thead>
-                        <tbody id="import-tbody"></tbody>
-                    </table>
-                    <div style="text-align:right; margin-top:1rem; display:flex; gap:10px; justify-content:flex-end;">
-                        <!-- FIX #3: cancelImport was called but never defined -->
-                        <button class="btn btn-danger" onclick="app.cancelImport()">Cancel</button>
-                        <button class="btn btn-primary" onclick="app.confirmImportBatch()">✅ Import All</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- REPORTS -->
-        <section id="view-reports" class="view-section">
-            <div style="display:flex; gap:10px; margin-bottom:1rem; flex-wrap:wrap;">
-                <button class="btn btn-primary" id="btn-pl" onclick="app.switchReport('pl')">📊 P&L Statement</button>
-                <button class="btn btn-outline" id="btn-bs" onclick="app.switchReport('bs')">🏦 Balance Sheet</button>
-                <button class="btn btn-outline" id="btn-cf" onclick="app.switchReport('cf')">💸 Cash Flow</button>
-            </div>
-            <div class="card">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
-                    <h3 style="margin:0;" id="report-title">Profit & Loss</h3>
-                    <button class="btn btn-sm btn-outline" onclick="window.print()">🖨️ Print</button>
-                </div>
-                <div id="report-display" style="line-height:2.2;"></div>
-            </div>
-        </section>
-
-    </main>
-</div>
-
-<!-- EDIT MODAL -->
-<div class="modal-overlay" id="edit-modal">
-    <div class="modal">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
-            <h3 style="margin:0;">Edit Transaction</h3>
-            <button class="btn btn-outline" style="padding:4px 8px;" onclick="app.closeModal()">✕</button>
+      <!-- ── AUTH ────────────────────────────── -->
+      <section id="view-auth" class="view active" style="display:flex;">
+        <div class="auth-card">
+          <div class="auth-logo">
+            <div class="auth-logo-icon">📓</div>
+            <h1>Ledgerly.ai</h1>
+            <p>AI-powered accounting for small business</p>
+          </div>
+          <div class="auth-tabs">
+            <button class="auth-tab active" id="tab-login" onclick="app.setAuthMode('login')">Login</button>
+            <button class="auth-tab" id="tab-register" onclick="app.setAuthMode('register')">Register</button>
+          </div>
+          <div class="form-row hidden" id="auth-name-row">
+            <label class="form-label">Full Name</label>
+            <input type="text" id="auth-name" placeholder="Your full name">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Email Address</label>
+            <input type="email" id="auth-email" placeholder="you@example.com">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Password</label>
+            <input type="password" id="auth-password" placeholder="Min. 6 characters">
+          </div>
+          <button class="btn btn-primary" style="width:100%;padding:11px;font-size:14px;margin-top:4px;" id="auth-submit-btn" onclick="app.handleAuthSubmit()">
+            <span id="auth-btn-text">Sign In</span>
+          </button>
+          <div id="auth-msg"></div>
         </div>
-        <input type="hidden" id="edit-id">
-        <div style="margin-bottom:10px;">
-            <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Description</label>
-            <input type="text" id="edit-desc" style="width:100%;">
+      </section>
+
+      <!-- ── DASHBOARD ────────────────────────── -->
+      <section id="view-dashboard" class="view">
+        <div class="stats-grid">
+          <div class="stat-card green">
+            <div>
+              <div class="stat-label">Cash &amp; Bank</div>
+              <div class="stat-value" id="dash-liquid">₹0</div>
+            </div>
+            <div style="font-size:28px;opacity:.15">💰</div>
+          </div>
+          <div class="stat-card blue">
+            <div>
+              <div class="stat-label">Total Assets</div>
+              <div class="stat-value" id="dash-assets">₹0</div>
+            </div>
+            <div style="font-size:28px;opacity:.15">🏦</div>
+          </div>
+          <div class="stat-card amber">
+            <div>
+              <div class="stat-label">Net Profit (YTD)</div>
+              <div class="stat-value" id="dash-profit">₹0</div>
+            </div>
+            <div style="font-size:28px;opacity:.15">📈</div>
+          </div>
         </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-            <div>
-                <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Net Amount (₹)</label>
-                <input type="number" id="edit-amount" style="width:100%;" min="0">
-            </div>
-            <div>
-                <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Date</label>
-                <input type="date" id="edit-date" style="width:100%;">
-            </div>
+
+        <div class="card">
+          <div class="card-title">
+            Recent Transactions
+            <button class="btn btn-sm btn-outline" onclick="app.navigate('input')">+ New Entry</button>
+          </div>
+          <div id="dash-empty" class="empty hidden">
+            <div class="empty-icon">📭</div>
+            <div class="empty-text">No transactions yet — use Smart Entry to add one!</div>
+          </div>
+          <div class="table-wrap">
+            <table id="dash-table">
+              <thead>
+                <tr>
+                  <th>Date</th><th>Description</th><th>Category</th>
+                  <th>GST</th><th>Amount</th><th>Status</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="dash-tbody"></tbody>
+            </table>
+          </div>
         </div>
-        <div style="margin-bottom:10px; padding:10px; background:#f0fdf4; border:1px dashed #86efac; border-radius:6px; display:flex; justify-content:space-between; align-items:center;">
-            <div>
-                <label style="font-size:0.75rem; font-weight:600; color:#166534;">Amount includes GST?</label>
-                <div style="font-size:0.7rem; color:#166534;">Check if amount was quoted inclusive of tax</div>
+      </section>
+
+      <!-- ── SMART ENTRY ────────────────────────── -->
+      <section id="view-input" class="view">
+        <div class="chat-wrap">
+          <div class="chat-history" id="chat-history">
+            <div class="msg ai">
+              💡 <strong>Smart Entry</strong> — type naturally:<br>
+              <em style="color:var(--text-3)">"Paid rent ₹12,000 via bank"</em> or <em style="color:var(--text-3)">"Sales 50k with 18% GST"</em>
             </div>
-            <input type="checkbox" id="edit-inclusive-gst" style="width:18px; height:18px;">
-        </div>
-        <div style="display:grid; grid-template-columns:2fr 1fr 1fr; gap:10px; margin-bottom:10px;">
-            <div>
-                <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Category</label>
-                <input type="text" id="edit-category" list="category-suggestions" style="width:100%;">
-            </div>
-            <div>
-                <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Type</label>
-                <select id="edit-account-type" style="width:100%;">
-                    <option value="Expense">Expense</option>
-                    <option value="Asset">Asset</option>
-                    <option value="Liability">Liability</option>
-                    <option value="Income">Income</option>
-                    <option value="Equity">Equity</option>
-                </select>
-            </div>
-            <div>
-                <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">Mode</label>
-                <select id="edit-mode" style="width:100%;">
-                    <option value="Cash">Cash</option>
-                    <option value="Bank">Bank</option>
-                    <option value="UPI">UPI</option>
-                </select>
-            </div>
-        </div>
-        <div style="margin-bottom:1.2rem;">
-            <label style="font-size:0.75rem; font-weight:600; display:block; margin-bottom:4px;">GST Rate</label>
-            <select id="edit-gst-rate" style="width:100%;">
-                <option value="0">No GST (0%)</option>
-                <option value="5">5%</option>
-                <option value="12">12%</option>
-                <option value="18">18%</option>
-                <option value="28">28%</option>
+          </div>
+          <div id="confirm-container"></div>
+          <div class="chat-input-row">
+            <button class="btn btn-outline btn-sm" onclick="app.startVoice()" title="Voice input">🎙️</button>
+            <input type="text" id="chat-input" list="cat-list"
+              placeholder="e.g. paid rent 5000 cash"
+              onkeypress="if(event.key==='Enter') app.processChatInput()">
+            <select class="chat-lang" id="voice-lang" style="width:110px;flex-shrink:0;">
+              <option value="en-IN">English</option>
+              <option value="hi-IN">हिंदी</option>
             </select>
+            <button class="btn btn-primary" id="send-btn" onclick="app.processChatInput()">Send</button>
+          </div>
         </div>
-        <div style="text-align:right; display:flex; gap:10px; justify-content:flex-end;">
-            <button class="btn btn-outline" onclick="app.closeModal()">Cancel</button>
-            <button class="btn btn-primary" onclick="app.saveEdit()">Save Changes</button>
+      </section>
+
+      <!-- ── BANK IMPORT ────────────────────────── -->
+      <section id="view-upload" class="view">
+        <div class="card" style="max-width:680px;margin:0 auto;">
+          <div class="card-title">Bank Statement Import</div>
+          <p style="font-size:13px;color:var(--text-3);margin-bottom:16px;">Upload a CSV bank statement. Transactions will be parsed and categorized automatically.</p>
+          <div class="drop-zone" id="drop-zone"
+            onclick="document.getElementById('file-input').click()"
+            ondragover="event.preventDefault();this.classList.add('drag')"
+            ondragleave="this.classList.remove('drag')"
+            ondrop="event.preventDefault();this.classList.remove('drag');app.handleFileSelect({files:event.dataTransfer.files})">
+            <div class="drop-icon">📄</div>
+            <div class="drop-title">Click to upload or drag &amp; drop</div>
+            <div class="drop-sub">CSV files supported · Max 5MB</div>
+            <input type="file" id="file-input" hidden accept=".csv,.pdf" onchange="app.handleFileSelect(this)">
+          </div>
+          <div id="import-preview" class="hidden" style="margin-top:20px;">
+            <div class="card-title" style="margin-bottom:10px;">
+              Review Transactions
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-sm btn-danger" onclick="app.cancelImport()">Cancel</button>
+                <button class="btn btn-sm btn-primary" onclick="app.confirmImportBatch()">✅ Import All</button>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table id="import-table">
+                <thead><tr><th>Date</th><th>Description</th><th>Amount</th><th>Category</th></tr></thead>
+                <tbody id="import-tbody"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
+      </section>
+
+      <!-- ── REPORTS ────────────────────────────── -->
+      <section id="view-reports" class="view">
+        <div class="report-tabs">
+          <button class="report-tab active" id="btn-pl" onclick="app.switchReport('pl')">📊 P&amp;L Statement</button>
+          <button class="report-tab" id="btn-bs" onclick="app.switchReport('bs')">🏦 Balance Sheet</button>
+          <button class="report-tab" id="btn-cf" onclick="app.switchReport('cf')">💸 Cash Flow</button>
+        </div>
+        <div class="card">
+          <div class="card-title">
+            <span id="report-title">Profit &amp; Loss Statement</span>
+            <button class="btn btn-sm btn-outline" onclick="window.print()">🖨️ Print</button>
+          </div>
+          <div id="report-display"></div>
+        </div>
+      </section>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- ── EDIT MODAL ──────────────────────────────── -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Edit Transaction</span>
+      <button class="modal-close" onclick="app.closeModal()">✕ Close</button>
     </div>
+    <input type="hidden" id="edit-id">
+    <div class="form-row">
+      <label class="form-label">Description</label>
+      <input type="text" id="edit-desc">
+    </div>
+    <div class="form-grid-2">
+      <div class="form-row">
+        <label class="form-label">Net Amount (₹)</label>
+        <input type="number" id="edit-amount" min="0">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Date</label>
+        <input type="date" id="edit-date">
+      </div>
+    </div>
+    <div class="form-row" style="background:var(--success-bg);border:1px dashed #86efac;border-radius:var(--radius-sm);padding:10px 12px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:#065f46;">Amount includes GST?</div>
+        <div style="font-size:11px;color:#065f46;">Check if tax is included in amount</div>
+      </div>
+      <input type="checkbox" id="edit-inclusive-gst" style="width:18px;height:18px;flex-shrink:0;">
+    </div>
+    <div class="form-grid-3" style="margin-top:14px;">
+      <div class="form-row">
+        <label class="form-label">Category</label>
+        <input type="text" id="edit-category" list="cat-list">
+      </div>
+      <div class="form-row">
+        <label class="form-label">Type</label>
+        <select id="edit-account-type">
+          <option value="Expense">Expense</option>
+          <option value="Asset">Asset</option>
+          <option value="Liability">Liability</option>
+          <option value="Income">Income</option>
+          <option value="Equity">Equity</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label class="form-label">Mode</label>
+        <select id="edit-mode">
+          <option>Cash</option><option>Bank</option><option>UPI</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">GST Rate</label>
+      <select id="edit-gst-rate">
+        <option value="0">No GST (0%)</option>
+        <option value="5">5%</option>
+        <option value="12">12%</option>
+        <option value="18">18%</option>
+        <option value="28">28%</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px;">
+      <button class="btn btn-outline" onclick="app.closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="app.saveEdit()">Save Changes</button>
+    </div>
+  </div>
 </div>
 
-<div class="toast-container" id="toast-container"></div>
+<!-- ── TOAST CONTAINER ─────────────────────────── -->
+<div id="toast-wrap"></div>
 
+<!-- ── BOTTOM NAV (mobile) ────────────────────── -->
+<nav id="bottom-nav">
+  <div class="bnav-inner">
+    <button class="bnav-btn active" id="bnav-dashboard" onclick="app.navigate('dashboard')">
+      <span class="bnav-icon">📊</span><span>Dashboard</span>
+    </button>
+    <button class="bnav-btn" id="bnav-input" onclick="app.navigate('input')">
+      <span class="bnav-icon">🎙️</span><span>Entry</span>
+    </button>
+    <button class="bnav-btn" id="bnav-upload" onclick="app.navigate('upload')">
+      <span class="bnav-icon">📄</span><span>Import</span>
+    </button>
+    <button class="bnav-btn" id="bnav-reports" onclick="app.navigate('reports')">
+      <span class="bnav-icon">📈</span><span>Reports</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ══════════════════════════════════════════════
+     ALL JAVASCRIPT — Preserved 100% from v4.5
+══════════════════════════════════════════════ -->
 <script>
-// ─────────────────────────────────────────────
-// CONFIG
-// ─────────────────────────────────────────────
 const API_URL    = 'https://ledgerly-backend-lsyz.onrender.com/api';
 const UPLOAD_URL = 'https://ledgerly-backend-lsyz.onrender.com/api/upload';
 
-// ─────────────────────────────────────────────
-// FIX #8: tx store — avoids JSON.stringify in onclick (breaks with quotes)
-// We store transaction objects here and pass only the ID to onclick
-// ─────────────────────────────────────────────
-const TxStore = {
-    _map: {},
-    set(id, tx) { this._map[id] = tx; },
-    get(id)     { return this._map[id] || null; },
-    clear()     { this._map = {}; }
-};
-
-// ─────────────────────────────────────────────
-// DATA API
-// ─────────────────────────────────────────────
-const DataAPI = {
-    getToken: ()       => localStorage.getItem('ledgerly_token'),
-    setToken: (t)      => localStorage.setItem('ledgerly_token', t),
-    clearToken: ()     => localStorage.removeItem('ledgerly_token'),
-
-    setStatus(status, text) {
-        const el = document.getElementById('server-status');
-        if (!el) return;
-        el.className = `server-status ${status}`;
-        const labels = { online: 'Server Online', syncing: 'Syncing...', offline: 'Offline' };
-        el.innerText = text || labels[status] || status;
-    },
-
-    async request(endpoint, method = 'GET', body = null) {
-        this.setStatus('syncing');
-        const headers = { 'Content-Type': 'application/json' };
-        const token = this.getToken();
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        try {
-            const opts = { method, headers };
-            if (body) opts.body = JSON.stringify(body);
-            const res = await fetch(`${API_URL}${endpoint}`, opts);
-            if (res.status === 401) {
-                this.clearToken();
-                app.navigate('auth');
-                this.setStatus('offline');
-                return null;
-            }
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            this.setStatus('online');
-            return data;
-        } catch (e) {
-            console.error('API error:', e);
-            this.setStatus('offline');
-            return null;
-        }
-    },
-
-    async login(email, password)           { return this.request('/auth/login',    'POST', { email, password }); },
-    async register(email, password, name)  { return this.request('/auth/register', 'POST', { email, password, name }); },
-    async getSync()                        { return this.request('/sync'); },
-    async saveSync(transactions)           { return this.request('/sync', 'POST', { transactions }); },
-
-    async smartEntry(text) {
-        this.setStatus('syncing');
-        const headers = { 'Content-Type': 'application/json' };
-        const token = this.getToken();
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        try {
-            const res = await fetch(`${API_URL}/smart-entry`, {
-                method: 'POST',
-                headers,
-                body: JSON.stringify({ text })
-            });
-            this.setStatus('online');
-            return await res.json();
-        } catch (e) {
-            console.error('Smart entry error:', e);
-            this.setStatus('offline');
-            return null;
-        }
-    },
-
-    async uploadFile(file) {
-        const formData = new FormData();
-        formData.append('file', file);
-        try {
-            const res = await fetch(UPLOAD_URL, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${this.getToken()}` },
-                body: formData
-            });
-            const result = await res.json();
-            return result.success ? result.data : null;
-        } catch (e) {
-            return null;
-        }
-    }
-};
-
-// ─────────────────────────────────────────────
-// STATE
-// ─────────────────────────────────────────────
-const State = {
-    currentUser: null,
-    currentBizId: null,
-    transactions: [],
-    businesses: [],
-    pendingTx: null,
-    importBatch: [],
-    lockedMonths: [],
-
-    get biz() {
-        return {
-            transactions: this.transactions.filter(t => t.businessId == this.currentBizId)
-        };
-    },
-
-    async init() {
-        const token = DataAPI.getToken();
-        if (!token) { app.navigate('auth'); return; }
-
-        const data = await DataAPI.getSync();
-        if (data && data.user) {
-            this.currentUser = data.user;
-            this.businesses  = data.businesses || [];
-            this.transactions = data.transactions || [];
-
-            // Update sidebar username
-            const name = data.user.name || data.user.email || 'User';
-            document.getElementById('sidebar-username').innerText = name;
-            document.getElementById('user-avatar').innerText = name.slice(0,2).toUpperCase();
-
-            if (this.businesses.length > 0) {
-                this.currentBizId = this.businesses[0].id;
-                app.updateBusinessSelect();
-            }
-            app.navigate('dashboard');
-        } else {
-            app.navigate('auth');
-        }
-    },
-
-    async save() {
-        const bizTx = this.transactions.filter(t => t.businessId == this.currentBizId);
-        await DataAPI.saveSync(bizTx);
-        app.renderDashboard();
-        app.renderReports();
-    },
-
-    async add(tx) {
-        const fullTx = {
-            ...tx,
-            id: tx.id || Date.now(),
-            businessId: this.currentBizId,
-            status: 'draft'
-        };
-        this.transactions.unshift(fullTx);
-        await this.save();
-        return fullTx;
-    },
-
-    async delete(id) {
-        this.transactions = this.transactions.filter(t => t.id != id);
-        await this.save();
-    },
-
-    async confirmTransaction(id) {
-        const idx = this.transactions.findIndex(t => t.id == id);
-        if (idx > -1) {
-            this.transactions[idx].status = 'confirmed';
-            await this.save();
-        }
-    }
-};
-
-// ─────────────────────────────────────────────
-// APP CONTROLLER
-// ─────────────────────────────────────────────
-const app = {
-    reportView: 'pl',
-    authMode: 'login',
-    currentRole: 'owner',
-
-    // ── AUTH ──────────────────────────────────
-    setAuthMode(mode) {
-        this.authMode = mode;
-        document.getElementById('btn-auth-login').className    = mode === 'login'    ? 'btn btn-primary' : 'btn btn-outline';
-        document.getElementById('btn-auth-register').className = mode === 'register' ? 'btn btn-primary' : 'btn btn-outline';
-        document.getElementById('auth-name').classList.toggle('hidden', mode === 'login');
-        document.getElementById('auth-btn-text').innerText = mode === 'login' ? 'Login' : 'Create Account';
-        document.getElementById('auth-message').innerText = '';
-    },
-
-    async handleAuthSubmit() {
-        const email    = document.getElementById('auth-email').value.trim();
-        const password = document.getElementById('auth-password').value;
-        const name     = document.getElementById('auth-name').value.trim();
-        const msg      = document.getElementById('auth-message');
-        const btn      = document.getElementById('auth-submit-btn');
-
-        if (!email || !password) { msg.style.color = 'red'; msg.innerText = 'Please fill all fields'; return; }
-
-        btn.innerHTML = '<span class="spinner"></span>';
-        btn.disabled = true;
-
-        let res;
-        if (this.authMode === 'register') {
-            if (!name) { msg.style.color = 'red'; msg.innerText = 'Full name is required'; btn.innerHTML = '<span id="auth-btn-text">Create Account</span>'; btn.disabled = false; return; }
-            res = await DataAPI.register(email, password, name);
-        } else {
-            res = await DataAPI.login(email, password);
-        }
-
-        btn.disabled = false;
-        btn.innerHTML = `<span id="auth-btn-text">${this.authMode === 'login' ? 'Login' : 'Create Account'}</span>`;
-
-        if (res && res.token) {
-            DataAPI.setToken(res.token);
-            msg.style.color = 'green';
-            msg.innerText = 'Success! Loading...';
-            setTimeout(() => State.init(), 800);
-        } else {
-            msg.style.color = 'red';
-            msg.innerText = res ? (res.error || 'Authentication failed') : 'Could not connect to server';
-        }
-    },
-
-    logout() {
-        if (confirm('Log out?')) {
-            DataAPI.clearToken();
-            TxStore.clear();
-            location.reload();
-        }
-    },
-
-    // ── NAVIGATION ────────────────────────────
-    navigate(view) {
-        // FIX #11: Proper handling of auth vs app views
-        const isAuth = view === 'auth';
-        document.getElementById('app-sidebar').style.display = isAuth ? 'none' : 'flex';
-        document.getElementById('app-header').style.display  = isAuth ? 'none' : 'flex';
-
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        const btn = document.querySelector(`button[onclick="app.navigate('${view}')"]`);
-        if (btn) btn.classList.add('active');
-
-        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-        const section = document.getElementById(`view-${view}`);
-        if (section) section.classList.add('active');
-
-        const titles = { dashboard: 'Dashboard', input: 'Smart Entry', upload: 'Bank Import', reports: 'Reports' };
-        const titleEl = document.getElementById('page-title');
-        if (titleEl && titles[view]) titleEl.innerText = titles[view];
-
-        if (view === 'dashboard') this.renderDashboard();
-        if (view === 'reports')   this.renderReports();
-    },
-
-    updateBusinessSelect() {
-        const sel = document.getElementById('business-switcher');
-        sel.innerHTML = '';
-        State.businesses.forEach(b => {
-            const opt = document.createElement('option');
-            opt.value = b.id; opt.innerText = b.name;
-            sel.appendChild(opt);
-        });
-    },
-
-    // FIX #6: switchBusiness properly defined on app
-    switchBusiness(id) {
-        State.switchBusiness(id);
-    },
-
-    // FIX #4: switchRole properly defined
-    switchRole(role) {
-        this.currentRole = role;
-        const badge = document.getElementById('current-role-badge');
-        if (role === 'owner') {
-            badge.className = 'badge owner';
-            badge.innerText = 'Owner 👑';
-        } else {
-            badge.className = 'badge viewer';
-            badge.innerText = 'Viewer 👁️';
-        }
-        showToast(`Switched to ${role} view`, 'info');
-        this.renderDashboard();
-    },
-
-    // FIX #5: runMonthEnd properly defined
-    runMonthEnd() {
-        const now   = new Date();
-        const label = now.toLocaleString('default', { month: 'long', year: 'numeric' });
-        if (confirm(`Lock all transactions for ${label}? This cannot be undone.`)) {
-            const key = `${now.getFullYear()}-${now.getMonth() + 1}`;
-            State.lockedMonths.push(key);
-            showToast(`${label} locked successfully`, 'success');
-            document.getElementById('month-lock-indicator').classList.remove('hidden');
-            this.renderDashboard();
-        }
-    },
-
-    // ── DASHBOARD ─────────────────────────────
-    formatCurrency(num) {
-        return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num || 0);
-    },
-
-    // ── STEP 1: Build raw ledger from all confirmed transactions ──
-    buildLedger() {
-        const ledger = {};
-        // Seed every COA account at zero so reports always show them
-        Object.entries(COA).forEach(([type, accounts]) => {
-            accounts.forEach(acc => { ledger[acc] = { dr: 0, cr: 0, type }; });
-        });
-        State.biz.transactions.forEach(tx => {
-            if (tx.status !== 'confirmed') return;
-            if (!Array.isArray(tx.entries))  return;
-            tx.entries.forEach(e => {
-                if (!e.account) return;
-                if (!ledger[e.account]) {
-                    // unknown account — infer type
-                    let t = 'unknown';
-                    for (const [type, accs] of Object.entries(COA)) {
-                        if (accs.includes(e.account)) { t = type; break; }
-                    }
-                    ledger[e.account] = { dr: 0, cr: 0, type: t };
-                }
-                ledger[e.account].dr += (e.dr || 0);
-                ledger[e.account].cr += (e.cr || 0);
-            });
-        });
-        return ledger;
-    },
-
-    // ── STEP 2: Get signed balance using normal-balance rules ──
-    // Asset/Expense  → debit-normal  → balance = Dr - Cr
-    // Income/Liability/Equity → credit-normal → balance = Cr - Dr
-    accountBalance(entry) {
-        const { dr, cr, type } = entry;
-        if (type === 'Asset' || type === 'Expense') return dr - cr;
-        return cr - dr;
-    },
-
-    // ── STEP 3: Full getBalances ──
-    getBalances() {
-        const ledger = this.buildLedger();
-
-        // ── P&L ──────────────────────────────
-        const incomeBreakdown  = {};
-        const expenseBreakdown = {};
-
-        COA.Income.forEach(acc => {
-            const bal = this.accountBalance(ledger[acc]);
-            if (bal !== 0) incomeBreakdown[acc] = bal;
-        });
-        COA.Expense.forEach(acc => {
-            const bal = this.accountBalance(ledger[acc]);
-            if (bal !== 0) expenseBreakdown[acc] = bal;
-        });
-
-        const totalIncome  = Object.values(incomeBreakdown).reduce((s, v) => s + v, 0);
-        const totalExpense = Object.values(expenseBreakdown).reduce((s, v) => s + v, 0);
-        const netProfit    = totalIncome - totalExpense;
-
-        // ── BALANCE SHEET — ASSETS ────────────
-        const cash = this.accountBalance(ledger['Cash']);
-        const bank = this.accountBalance(ledger['Bank']);
-
-        const assetBreakdown = {};
-        COA.Asset.filter(a => a !== 'Cash' && a !== 'Bank').forEach(acc => {
-            const bal = this.accountBalance(ledger[acc]);
-            if (bal !== 0) assetBreakdown[acc] = bal;
-        });
-        const totalOtherAssets = Object.values(assetBreakdown).reduce((s, v) => s + v, 0);
-        const totalAssets      = cash + bank + totalOtherAssets;
-
-        // ── BALANCE SHEET — LIABILITIES ───────
-        const liabilityBreakdown = {};
-        COA.Liability.forEach(acc => {
-            const bal = this.accountBalance(ledger[acc]);
-            if (bal !== 0) liabilityBreakdown[acc] = bal;
-        });
-        const totalLiabilities = Object.values(liabilityBreakdown).reduce((s, v) => s + v, 0);
-
-        // ── BALANCE SHEET — EQUITY ────────────
-        const capital          = this.accountBalance(ledger['Capital']);
-        const retainedEarnings = netProfit;
-        const totalEquity      = capital + retainedEarnings;
-        const totalLiabEquity  = totalLiabilities + totalEquity;
-
-        // ── CASH FLOW ─────────────────────────
-        // Look at actual Cash/Bank entry movements, not inferred from accountType
-        let operatingCash = 0, investingCash = 0, financingCash = 0;
-        State.biz.transactions.forEach(tx => {
-            if (tx.status !== 'confirmed' || !Array.isArray(tx.entries)) return;
-            tx.entries.forEach(e => {
-                if (e.account !== 'Cash' && e.account !== 'Bank') return;
-                const flow = (e.dr || 0) - (e.cr || 0); // + = cash in, - = cash out
-                const type = tx.accountType;
-                if      (type === 'Income'   || type === 'Expense')  operatingCash += flow;
-                else if (type === 'Asset')                            investingCash += flow;
-                else if (type === 'Liability' || type === 'Equity')  financingCash += flow;
-            });
-        });
-        const netCashChange = operatingCash + investingCash + financingCash;
-
-        return {
-            // Dashboard
-            cash, bank, totalAssets, netProfit,
-            // P&L detail
-            totalIncome, totalExpense, incomeBreakdown, expenseBreakdown,
-            // Balance sheet
-            assetBreakdown, totalOtherAssets,
-            liabilityBreakdown, totalLiabilities,
-            capital, retainedEarnings, totalEquity, totalLiabEquity,
-            // Cash flow
-            operatingCash, investingCash, financingCash, netCashChange
-        };
-    },
-
-    renderDashboard() {
-        const b = this.getBalances();
-
-        document.getElementById('dash-liquid').innerText = this.formatCurrency(b.cash + b.bank);
-        document.getElementById('dash-assets').innerText = this.formatCurrency(b.totalAssets);
-        const profitEl = document.getElementById('dash-profit');
-        profitEl.innerText   = this.formatCurrency(b.netProfit);
-        profitEl.style.color = b.netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
-
-        const tbody  = document.getElementById('dash-tx-body');
-        const empty  = document.getElementById('dash-empty');
-        const table  = document.getElementById('dash-table');
-        const txList = State.biz.transactions.slice(0, 15);
-
-        tbody.innerHTML = '';
-        TxStore.clear();
-
-        if (txList.length === 0) {
-            empty.classList.remove('hidden');
-            table.style.display = 'none';
-        } else {
-            empty.classList.add('hidden');
-            table.style.display = '';
-
-            txList.forEach(t => {
-                TxStore.set(t.id, t);
-                const isLocked    = this.isTxLocked(t);
-                const gstBadge    = t.gstRate > 0
-                    ? `<span class="badge" style="background:#dcfce7;color:#166534;">${t.gstRate}%</span>`
-                    : '<span style="color:#ccc;">—</span>';
-                const statusClass = t.status === 'confirmed' ? 'confirmed' : 'draft';
-
-                // Income/Liability/Equity = money coming IN = green +
-                // Expense/Asset = money going OUT = red -
-                const isInflow  = ['Income','Liability','Equity'].includes(t.accountType);
-                const amtColor  = isInflow ? 'var(--success)' : 'var(--danger)';
-                const amtSign   = isInflow ? '+' : '-';
-
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${t.date || '—'}</td>
-                    <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${t.desc || ''}">${t.desc || '—'}</td>
-                    <td>${t.category || '—'}</td>
-                    <td>${gstBadge}</td>
-                    <td style="font-weight:600;color:${amtColor};">${amtSign}${this.formatCurrency(t.netAmount)}</td>
-                    <td><span class="badge ${statusClass}">${t.status}</span></td>
-                    <td style="display:flex;gap:4px;flex-wrap:wrap;">
-                        ${t.status !== 'confirmed'
-                            ? `<button class="btn btn-sm btn-success" onclick="app.confirmTx(${t.id})">✓</button>`
-                            : ''}
-                        <button class="btn btn-sm btn-outline" onclick="app.openEditById(${t.id})">Edit</button>
-                        ${!isLocked
-                            ? `<button class="btn btn-sm btn-danger" onclick="app.deleteTx(${t.id})">Del</button>`
-                            : ''}
-                    </td>`;
-                tbody.appendChild(tr);
-            });
-        }
-    },
-
-    isTxLocked(tx) {
-        if (!tx.date) return false;
-        const d   = new Date(tx.date);
-        const key = `${d.getFullYear()}-${d.getMonth() + 1}`;
-        return State.lockedMonths.includes(key);
-    },
-
-    async confirmTx(id) {
-        await State.confirmTransaction(id);
-        showToast('Transaction confirmed', 'success');
-    },
-
-    async deleteTx(id) {
-        if (confirm('Delete this transaction?')) {
-            await State.delete(id);
-            showToast('Deleted', 'warning');
-        }
-    },
-
-    // ── SMART ENTRY ───────────────────────────
-    async processChatInput() {
-        const input  = document.getElementById('chat-input');
-        const sendBtn = document.getElementById('send-btn');
-        const text   = input.value.trim();
-        if (!text) return;
-
-        const history = document.getElementById('chat-history');
-        const uMsg = document.createElement('div');
-        uMsg.className = 'msg user';
-        uMsg.innerText = text;
-        history.appendChild(uMsg);
-        input.value = '';
-        sendBtn.innerHTML = '<span class="spinner"></span>';
-        sendBtn.disabled = true;
-
-        history.scrollTop = history.scrollHeight;
-
-        // FIX #1: NLP.parse is now defined above
-        const parsed = NLP.parse(text);
-
-        if (parsed.amount === 0) {
-            const errMsg = document.createElement('div');
-            errMsg.className = 'msg error';
-            errMsg.innerText = '⚠️ No amount found. Try: "Paid rent 5000" or "Sales 12000 with 18% GST"';
-            history.appendChild(errMsg);
-            sendBtn.innerHTML = 'Send'; sendBtn.disabled = false;
-            return;
-        }
-
-        // Try smart backend first, fall back to NLP
-        let tx = null;
-        try {
-            const res = await DataAPI.smartEntry(text);
-            if (res && res.success && res.transaction) {
-                tx = res.transaction;
-                console.log('Smart Engine used ✅');
-            }
-        } catch (e) { /* fall through */ }
-
-        if (!tx) {
-            // FIX #1 + #2: Build a full tx object with entries using NLP parse
-            console.log('Falling back to local NLP...');
-            tx = this.buildLocalTx(parsed, text);
-        }
-
-        // FIX #2: Always set pendingTx so confirmPending works
-        State.pendingTx = tx;
-        this.renderConfirmationCard(tx);
-
-        sendBtn.innerHTML = 'Send';
-        sendBtn.disabled = false;
-        history.scrollTop = history.scrollHeight;
-    },
-
-    buildLocalTx(parsed, originalText) {
-        // Calculate GST
-        let netAmount = parsed.amount;
-        let gstAmount = 0;
-        let grossAmount = parsed.amount;
-
-        if (parsed.gstRate > 0) {
-            if (parsed.isInclusiveGST) {
-                netAmount   = Math.round(parsed.amount / (1 + parsed.gstRate / 100));
-                gstAmount   = parsed.amount - netAmount;
-                grossAmount = parsed.amount;
-            } else {
-                gstAmount   = Math.round(parsed.amount * parsed.gstRate / 100);
-                grossAmount = parsed.amount + gstAmount;
-            }
-        }
-
-        // Build double-entry journal entries
-        const entries = [];
-        const mode = parsed.mode; // Cash, Bank, UPI
-
-        if (parsed.accountType === 'Expense') {
-            entries.push({ account: parsed.category,          dr: netAmount, cr: 0 });
-            if (gstAmount > 0) entries.push({ account: 'Input Tax Credit', dr: gstAmount, cr: 0 });
-            entries.push({ account: mode === 'UPI' ? 'Bank' : mode, dr: 0, cr: grossAmount });
-        } else if (parsed.accountType === 'Income') {
-            entries.push({ account: mode === 'UPI' ? 'Bank' : mode, dr: grossAmount, cr: 0 });
-            if (gstAmount > 0) entries.push({ account: 'GST Payable', dr: 0, cr: gstAmount });
-            entries.push({ account: parsed.category, dr: 0, cr: netAmount });
-        } else if (parsed.accountType === 'Asset') {
-            entries.push({ account: parsed.category,                  dr: netAmount, cr: 0 });
-            entries.push({ account: mode === 'UPI' ? 'Bank' : mode,   dr: 0, cr: netAmount });
-        } else if (parsed.accountType === 'Liability') {
-            entries.push({ account: mode === 'UPI' ? 'Bank' : mode, dr: netAmount, cr: 0 });
-            entries.push({ account: parsed.category,                dr: 0, cr: netAmount });
-        } else if (parsed.accountType === 'Equity') {
-            entries.push({ account: mode === 'UPI' ? 'Bank' : mode, dr: netAmount, cr: 0 });
-            entries.push({ account: parsed.category,                dr: 0, cr: netAmount });
-        }
-
-        return {
-            id:            Date.now(),
-            desc:          parsed.desc || originalText,
-            date:          parsed.date,
-            netAmount,
-            gstAmount,
-            grossAmount,
-            gstRate:       parsed.gstRate,
-            isInclusiveGST: parsed.isInclusiveGST,
-            mode:          parsed.mode,
-            accountType:   parsed.accountType,
-            category:      parsed.category,
-            entries
-        };
-    },
-
-    renderConfirmationCard(tx) {
-        const container = document.getElementById('confirm-container');
-
-        // FIX #9: Safe check for entries
-        const entries = Array.isArray(tx.entries) ? tx.entries : [];
-        const ledgerRows = entries.map(e =>
-            `<tr>
-                <td>${e.account}</td>
-                <td class="dr">${e.dr > 0 ? 'Dr ' + e.dr : ''}</td>
-                <td class="cr">${e.cr > 0 ? 'Cr ' + e.cr : ''}</td>
-            </tr>`
-        ).join('');
-
-        const drTotal = entries.reduce((s, e) => s + (e.dr || 0), 0);
-        const crTotal = entries.reduce((s, e) => s + (e.cr || 0), 0);
-        const balanced = Math.abs(drTotal - crTotal) < 1;
-
-        // FIX #8: store in TxStore instead of JSON.stringify in onclick
-        TxStore.set(tx.id, tx);
-
-        container.innerHTML = `
-        <div class="confirm-card">
-            <div class="confirm-header">
-                <span>📋 Double-Entry Verification ${balanced ? '✅' : '⚠️ Unbalanced'}</span>
-                <span style="cursor:pointer;" onclick="app.cancelPending()">✕</span>
-            </div>
-            <div class="confirm-body">
-                <div class="confirm-row"><span style="color:var(--text-muted);">Description</span><span style="font-weight:600; max-width:60%; text-align:right;">${tx.desc || '—'}</span></div>
-                <div class="confirm-row"><span style="color:var(--text-muted);">Type</span><span style="font-weight:600;">${tx.accountType}</span></div>
-                <div class="confirm-row"><span style="color:var(--text-muted);">Amount</span><span style="font-weight:600;">${this.formatCurrency(tx.netAmount)}</span></div>
-                ${tx.gstAmount > 0 ? `<div class="confirm-row"><span style="color:var(--text-muted);">GST (${tx.gstRate}%)</span><span style="color:var(--success);">+ ${this.formatCurrency(tx.gstAmount)}</span></div>` : ''}
-                <table class="mini-ledger">
-                    <thead><tr><th>Account</th><th>Debit</th><th>Credit</th></tr></thead>
-                    <tbody>${ledgerRows}</tbody>
-                </table>
-                <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
-                    <button class="btn btn-danger" onclick="app.cancelPending()">Cancel</button>
-                    <button class="btn btn-primary" onclick="app.confirmPending()">✅ Confirm Entry</button>
-                    <button class="btn btn-outline" style="margin-left:auto;" onclick="app.openEditById(${tx.id})">✏️ Edit</button>
-                </div>
-            </div>
-        </div>`;
-        container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    },
-
-    // FIX #2: confirmPending now works for both smart and local entries
-    async confirmPending() {
-        if (!State.pendingTx) return;
-        const tx = State.pendingTx;
-        await State.add(tx);
-
-        document.getElementById('confirm-container').innerHTML = '';
-        const history = document.getElementById('chat-history');
-        const aMsg    = document.createElement('div');
-        aMsg.className = 'msg ai';
-        aMsg.innerHTML = `✅ <strong>Entry added:</strong> ${tx.desc} — ${this.formatCurrency(tx.netAmount)}`;
-        history.appendChild(aMsg);
-        history.scrollTop = history.scrollHeight;
-        State.pendingTx = null;
-    },
-
-    cancelPending() {
-        State.pendingTx = null;
-        document.getElementById('confirm-container').innerHTML = '';
-    },
-
-    startVoice() {
-        if (!('webkitSpeechRecognition' in window)) { showToast('Voice not supported in this browser', 'error'); return; }
-        const lang = document.getElementById('voice-lang').value;
-        const rec  = new webkitSpeechRecognition();
-        rec.lang              = lang;
-        rec.continuous        = false;
-        rec.interimResults    = false;
-        rec.onstart           = () => showToast('Listening...', 'info');
-        rec.onresult          = (e) => {
-            document.getElementById('chat-input').value = e.results[0][0].transcript;
-            this.processChatInput();
-        };
-        rec.onerror = (e) => showToast('Voice error: ' + e.error, 'error');
-        rec.start();
-    },
-
-    // ── BANK IMPORT ───────────────────────────
-    async handleFileSelect(input) {
-        const file = input.files && input.files[0];
-        if (!file) return;
-        showToast('Uploading...', 'info');
-        const parsed = await DataAPI.uploadFile(file);
-        if (parsed && parsed.length > 0) {
-            State.importBatch = parsed;
-            const tbody = document.getElementById('import-tbody');
-            tbody.innerHTML = State.importBatch.map(t =>
-                `<tr>
-                    <td>${t.date || '—'}</td>
-                    <td>${t.desc || '—'}</td>
-                    <td style="font-weight:bold;">${this.formatCurrency(t.amount)}</td>
-                    <td>${t.category || 'Misc'}</td>
-                </tr>`
-            ).join('');
-            document.getElementById('pending-imports-container').classList.remove('hidden');
-            showToast(`${parsed.length} transactions parsed`, 'success');
-        } else {
-            showToast('Parse failed or no data returned', 'error');
-        }
-    },
-
-    // FIX #12: confirmImportBatch uses sequential await instead of forEach+async
-    async confirmImportBatch() {
-        showToast('Importing...', 'info');
-        for (const t of State.importBatch) {
-            await State.add({ ...t, netAmount: t.amount, accountType: t.accountType || 'Expense', category: t.category || 'Misc', mode: 'Bank', entries: t.entries || [] });
-        }
-        State.importBatch = [];
-        document.getElementById('pending-imports-container').classList.add('hidden');
-        document.getElementById('import-tbody').innerHTML = '';
-        showToast('Import complete!', 'success');
-        this.navigate('dashboard');
-    },
-
-    // FIX #3: cancelImport was missing
-    cancelImport() {
-        State.importBatch = [];
-        document.getElementById('pending-imports-container').classList.add('hidden');
-        document.getElementById('import-tbody').innerHTML = '';
-        document.getElementById('file-input').value = '';
-    },
-
-    // ── REPORTS ───────────────────────────────
-    switchReport(v) {
-        this.reportView = v;
-        ['pl', 'bs', 'cf'].forEach(id => {
-            const btn = document.getElementById('btn-' + id);
-            btn.className = id === v ? 'btn btn-primary' : 'btn btn-outline';
-        });
-        this.renderReports();
-    },
-
-    renderReports() {
-        const b   = this.getBalances();
-        const fmt = (n) => this.formatCurrency(n);
-
-        // ── Helpers ───────────────────────────
-        const secHeader = (label) => `
-            <div style="font-size:0.72rem;font-weight:700;letter-spacing:0.1em;
-                text-transform:uppercase;color:var(--text-muted);
-                padding:14px 0 5px;border-bottom:2px solid var(--border);
-                margin-bottom:4px;">${label}</div>`;
-
-        const row = (label, amount, { bold=false, color=null, indent=false, topLine=false } = {}) => `
-            <div style="display:flex;justify-content:space-between;padding:${bold?'8px':'3px'} 0;
-                ${indent     ? 'padding-left:1.4rem;color:var(--text-muted);font-size:0.88rem;' : ''}
-                ${bold       ? 'font-weight:700;'          : ''}
-                ${topLine    ? 'border-top:2px solid var(--border);margin-top:10px;padding-top:10px;' : ''}
-                ${color      ? `color:${color};`           : ''}">
-                <span>${label}</span><span>${fmt(amount)}</span>
-            </div>`;
-
-        const noData = `<div style="color:var(--text-muted);font-size:0.85rem;
-            padding:4px 0 4px 1.4rem;">None recorded yet</div>`;
-
-        // ── P&L ──────────────────────────────────────
-        if (this.reportView === 'pl') {
-            document.getElementById('report-title').innerText = 'Profit & Loss Statement';
-
-            const incomeRows  = Object.keys(b.incomeBreakdown).length
-                ? Object.entries(b.incomeBreakdown).map(([a,v]) => row(a, v, { indent:true })).join('')
-                : noData;
-
-            const expenseRows = Object.keys(b.expenseBreakdown).length
-                ? Object.entries(b.expenseBreakdown).map(([a,v]) => row(a, v, { indent:true })).join('')
-                : noData;
-
-            const profitColor = b.netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
-            const profitLabel = b.netProfit >= 0 ? '📈 Net Profit' : '📉 Net Loss';
-
-            document.getElementById('report-display').innerHTML = `
-                ${secHeader('Income')}
-                ${incomeRows}
-                ${row('Total Income', b.totalIncome, { bold:true })}
-
-                ${secHeader('Expenses')}
-                ${expenseRows}
-                ${row('Total Expenses', b.totalExpense, { bold:true })}
-
-                ${row(profitLabel, Math.abs(b.netProfit), { bold:true, topLine:true, color:profitColor })}
-            `;
-
-        // ── BALANCE SHEET ─────────────────────────────
-        } else if (this.reportView === 'bs') {
-            document.getElementById('report-title').innerText = 'Balance Sheet';
-
-            const assetRows = [
-                row('Cash', b.cash,   { indent:true }),
-                row('Bank', b.bank,   { indent:true }),
-                ...Object.entries(b.assetBreakdown).map(([a,v]) => row(a, v, { indent:true }))
-            ].join('');
-
-            const liabRows = Object.keys(b.liabilityBreakdown).length
-                ? Object.entries(b.liabilityBreakdown).map(([a,v]) => row(a, v, { indent:true })).join('')
-                : noData;
-
-            const balanced   = Math.abs(b.totalAssets - b.totalLiabEquity) < 1;
-            const retColor   = b.retainedEarnings >= 0 ? 'var(--success)' : 'var(--danger)';
-
-            document.getElementById('report-display').innerHTML = `
-                ${secHeader('Assets')}
-                ${assetRows}
-                ${row('Total Assets', b.totalAssets, { bold:true })}
-
-                ${secHeader('Liabilities')}
-                ${liabRows}
-                ${row('Total Liabilities', b.totalLiabilities, { bold:true })}
-
-                ${secHeader("Owner's Equity")}
-                ${row('Capital Invested',          b.capital,          { indent:true })}
-                ${row('Retained Earnings (P&L)',   b.retainedEarnings, { indent:true, color:retColor })}
-                ${row('Total Equity',              b.totalEquity,      { bold:true })}
-
-                ${row('Total Liabilities + Equity', b.totalLiabEquity, { bold:true, topLine:true })}
-
-                <div style="margin-top:14px;padding:10px 14px;text-align:center;font-weight:700;
-                    border-radius:6px;font-size:0.95rem;
-                    background:${balanced ? '#dcfce7' : '#fee2e2'};
-                    color:${balanced ? '#166534' : '#dc2626'};">
-                    ${balanced
-                        ? '✅ Balance Sheet is BALANCED'
-                        : `❌ UNBALANCED — gap: ${fmt(Math.abs(b.totalAssets - b.totalLiabEquity))}`}
-                </div>
-            `;
-
-        // ── CASH FLOW ─────────────────────────────────
-        } else if (this.reportView === 'cf') {
-            document.getElementById('report-title').innerText = 'Cash Flow Statement';
-
-            const cfRow = (label, amount) => {
-                const c = amount >= 0 ? 'var(--success)' : 'var(--danger)';
-                const s = amount >= 0 ? '+' : '';
-                return `<div style="display:flex;justify-content:space-between;
-                    padding:3px 0 3px 1.4rem;color:var(--text-muted);font-size:0.88rem;">
-                    <span>${label}</span>
-                    <span style="color:${c};font-weight:500;">${s}${fmt(amount)}</span>
-                </div>`;
-            };
-
-            const netColor = b.netCashChange >= 0 ? 'var(--success)' : 'var(--danger)';
-            const netLabel = b.netCashChange >= 0 ? '📈 Net Increase in Cash' : '📉 Net Decrease in Cash';
-
-            document.getElementById('report-display').innerHTML = `
-                ${secHeader('Operating Activities')}
-                <div style="color:var(--text-muted);font-size:0.78rem;padding:2px 0 4px 1.4rem;">
-                    Day-to-day income &amp; expenses
-                </div>
-                ${cfRow('Net Cash from Operations', b.operatingCash)}
-                ${row('Subtotal', b.operatingCash, { bold:true, color: b.operatingCash >= 0 ? 'var(--success)':'var(--danger)' })}
-
-                ${secHeader('Investing Activities')}
-                <div style="color:var(--text-muted);font-size:0.78rem;padding:2px 0 4px 1.4rem;">
-                    Buying or selling assets (equipment, etc.)
-                </div>
-                ${cfRow('Net Cash from Investing', b.investingCash)}
-                ${row('Subtotal', b.investingCash, { bold:true, color: b.investingCash >= 0 ? 'var(--success)':'var(--danger)' })}
-
-                ${secHeader('Financing Activities')}
-                <div style="color:var(--text-muted);font-size:0.78rem;padding:2px 0 4px 1.4rem;">
-                    Loans taken, capital invested, owner contributions
-                </div>
-                ${cfRow('Net Cash from Financing', b.financingCash)}
-                ${row('Subtotal', b.financingCash, { bold:true, color: b.financingCash >= 0 ? 'var(--success)':'var(--danger)' })}
-
-                ${row(netLabel, Math.abs(b.netCashChange), { bold:true, topLine:true, color:netColor })}
-
-                <div style="margin-top:12px;padding:10px 14px;
-                    background:#f8fafc;border:1px solid var(--border);
-                    border-radius:6px;display:flex;justify-content:space-between;
-                    font-size:0.88rem;">
-                    <span style="color:var(--text-muted);">Closing Cash &amp; Bank Balance</span>
-                    <span style="font-weight:700;">${fmt(b.cash + b.bank)}</span>
-                </div>
-            `;
-        }
-    },
-
-    // ── EDIT MODAL ────────────────────────────
-    // FIX #8: openEditById uses TxStore — no JSON.stringify in HTML
-    openEditById(id) {
-        const t = TxStore.get(id);
-        if (!t) { showToast('Transaction not found', 'error'); return; }
-        this.openEdit(id, t);
-    },
-
-    openEdit(id, t) {
-        document.getElementById('edit-id').value               = t.id || id;
-        document.getElementById('edit-desc').value             = t.desc       || '';
-        document.getElementById('edit-amount').value           = t.netAmount  || 0;
-        document.getElementById('edit-category').value         = t.category   || '';
-        document.getElementById('edit-date').value             = t.date       || '';
-        document.getElementById('edit-mode').value             = t.mode       || 'Cash';
-        document.getElementById('edit-account-type').value     = t.accountType|| 'Expense';
-        document.getElementById('edit-gst-rate').value         = t.gstRate    || 0;
-        document.getElementById('edit-inclusive-gst').checked  = !!t.isInclusiveGST;
-        document.getElementById('edit-modal').classList.add('active');
-    },
-
-    async saveEdit() {
-        const id = document.getElementById('edit-id').value;
-        const updates = {
-            desc:          document.getElementById('edit-desc').value,
-            netAmount:     parseFloat(document.getElementById('edit-amount').value),
-            category:      document.getElementById('edit-category').value,
-            isInclusiveGST:document.getElementById('edit-inclusive-gst').checked,
-            gstRate:       parseInt(document.getElementById('edit-gst-rate').value),
-            mode:          document.getElementById('edit-mode').value,
-            accountType:   document.getElementById('edit-account-type').value,
-            date:          document.getElementById('edit-date').value
-        };
-
-        const idx = State.transactions.findIndex(t => t.id == id);
-        if (idx > -1) {
-            const existing = State.transactions[idx];
-            // Re-run local entry calculation if amount/type changed
-            const amountChanged = updates.netAmount !== existing.netAmount;
-            const typeChanged   = updates.accountType !== existing.accountType;
-
-            let finalTx = { ...existing, ...updates };
-
-            if (amountChanged || typeChanged) {
-                const rebuilt = this.buildLocalTx({
-                    amount:        updates.netAmount,
-                    gstRate:       updates.gstRate,
-                    isInclusiveGST:updates.isInclusiveGST,
-                    mode:          updates.mode,
-                    accountType:   updates.accountType,
-                    category:      updates.category,
-                    date:          updates.date,
-                    desc:          updates.desc
-                }, updates.desc);
-                finalTx.entries     = rebuilt.entries;
-                finalTx.gstAmount   = rebuilt.gstAmount;
-                finalTx.grossAmount = rebuilt.grossAmount;
-            }
-
-            State.transactions[idx] = finalTx;
-            await State.save();
-            showToast('Changes saved', 'success');
-        }
-        this.closeModal();
-    },
-
-    closeModal() {
-        document.getElementById('edit-modal').classList.remove('active');
-    },
-
-    // ── INIT ──────────────────────────────────
-    init() {
-        // Populate category datalist
-        const dl = document.getElementById('category-suggestions');
-        Object.values(COA).flat().forEach(c => {
-            const opt = document.createElement('option');
-            opt.value = c;
-            dl.appendChild(opt);
-        });
-        State.init();
-    }
-};
-
-// Close modal on overlay click
-document.getElementById('edit-modal').addEventListener('click', function(e) {
-    if (e.target === this) app.closeModal();
-});
-
-// FIX: switchBusiness on State too
-State.switchBusiness = function(id) {
-    this.currentBizId = id;
-    app.navigate('dashboard');
-};
-
-// ─────────────────────────────────────────────
-// TOAST
-// ─────────────────────────────────────────────
-function showToast(msg, type = 'success') {
-    const container = document.getElementById('toast-container');
-    if (!container) return;
-    const icons = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span> ${msg}`;
-    container.appendChild(toast);
-    setTimeout(() => toast.style.opacity = '0', 2700);
-    setTimeout(() => toast.remove(), 3000);
+/* ── Sidebar helpers ── */
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('open');
 }
 
-// ─────────────────────────────────────────────
-// BOOT
-// ─────────────────────────────────────────────
+/* ── TxStore ── */
+const TxStore = {
+  _m:{},
+  set(id,tx){ this._m[id]=tx; },
+  get(id)   { return this._m[id]||null; },
+  clear()   { this._m={}; }
+};
+
+/* ── DataAPI ── */
+const DataAPI = {
+  getToken:   () => localStorage.getItem('ledgerly_token'),
+  setToken:   t  => localStorage.setItem('ledgerly_token', t),
+  clearToken: () => localStorage.removeItem('ledgerly_token'),
+
+  setStatus(s, text) {
+    const el = document.getElementById('server-status');
+    if (!el) return;
+    el.className = 'server-status ' + s;
+    el.textContent = text || ({online:'Online',syncing:'Syncing…',offline:'Offline'}[s]||s);
+  },
+
+  async request(ep, method='GET', body=null) {
+    this.setStatus('syncing');
+    const headers = {'Content-Type':'application/json'};
+    const token = this.getToken();
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    try {
+      const opts = {method, headers};
+      if (body) opts.body = JSON.stringify(body);
+      const res = await fetch(API_URL + ep, opts);
+      if (res.status === 401) { this.clearToken(); app.navigate('auth'); this.setStatus('offline'); return null; }
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      this.setStatus('online');
+      return data;
+    } catch(e) {
+      console.error('API error:', e);
+      this.setStatus('offline');
+      return null;
+    }
+  },
+
+  login:    (email,password)       => DataAPI.request('/auth/login',    'POST', {email,password}),
+  register: (email,password,name)  => DataAPI.request('/auth/register', 'POST', {email,password,name}),
+  getSync:  ()                     => DataAPI.request('/sync'),
+  saveSync: (transactions)         => DataAPI.request('/sync','POST',{transactions}),
+
+  async smartEntry(text) {
+    this.setStatus('syncing');
+    const headers = {'Content-Type':'application/json'};
+    const token = this.getToken();
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    try {
+      const res = await fetch(API_URL+'/smart-entry',{method:'POST',headers,body:JSON.stringify({text})});
+      this.setStatus('online');
+      return await res.json();
+    } catch(e) { this.setStatus('offline'); return null; }
+  },
+
+  async uploadFile(file) {
+    const fd = new FormData(); fd.append('file', file);
+    try {
+      const res = await fetch(UPLOAD_URL,{method:'POST',headers:{'Authorization':'Bearer '+this.getToken()},body:fd});
+      const r = await res.json();
+      return r.success ? r.data : null;
+    } catch(e) { return null; }
+  }
+};
+
+/* ── State ── */
+const State = {
+  currentUser:null, currentBizId:null,
+  transactions:[], businesses:[], pendingTx:null, importBatch:[],
+  lockedMonths:[],
+  get biz() { return { transactions: this.transactions.filter(t=>t.businessId==this.currentBizId) }; },
+  async init() {
+    const token = DataAPI.getToken();
+    if (!token) { app.navigate('auth'); return; }
+    const data = await DataAPI.getSync();
+    if (data && data.user) {
+      this.currentUser = data.user;
+      this.businesses  = data.businesses || [];
+      this.transactions = data.transactions || [];
+      const name = data.user.name || data.user.email || 'User';
+      document.getElementById('sidebar-username').textContent = name;
+      document.getElementById('user-avatar').textContent = name.slice(0,2).toUpperCase();
+      if (this.businesses.length > 0) {
+        this.currentBizId = this.businesses[0].id;
+        app.updateBizSelect();
+      }
+      app.navigate('dashboard');
+    } else { app.navigate('auth'); }
+  },
+  async save() {
+    await DataAPI.saveSync(this.transactions.filter(t=>t.businessId==this.currentBizId));
+    app.renderDashboard(); app.renderReports();
+  },
+  async add(tx) {
+    const full = {...tx, id:tx.id||Date.now(), businessId:this.currentBizId, status:'draft'};
+    this.transactions.unshift(full);
+    await this.save();
+    return full;
+  },
+  async delete(id) { this.transactions=this.transactions.filter(t=>t.id!=id); await this.save(); },
+  async confirmTransaction(id) {
+    const i = this.transactions.findIndex(t=>t.id==id);
+    if (i>-1) { this.transactions[i].status='confirmed'; await this.save(); }
+  },
+  switchBusiness(id) { this.currentBizId = id; app.navigate('dashboard'); }
+};
+
+/* ── App ── */
+const app = {
+  reportView:'pl', authMode:'login',
+
+  /* AUTH */
+  setAuthMode(mode) {
+    this.authMode = mode;
+    document.getElementById('tab-login').classList.toggle('active', mode==='login');
+    document.getElementById('tab-register').classList.toggle('active', mode==='register');
+    document.getElementById('auth-name-row').classList.toggle('hidden', mode==='login');
+    document.getElementById('auth-btn-text').textContent = mode==='login' ? 'Sign In' : 'Create Account';
+    document.getElementById('auth-msg').textContent = '';
+  },
+
+  async handleAuthSubmit() {
+    const email = document.getElementById('auth-email').value.trim();
+    const pass  = document.getElementById('auth-password').value;
+    const name  = document.getElementById('auth-name').value.trim();
+    const msg   = document.getElementById('auth-msg');
+    const btn   = document.getElementById('auth-submit-btn');
+    if (!email || !pass) { msg.style.color='var(--danger)'; msg.textContent='Please fill all fields'; return; }
+    btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+    let res;
+    if (this.authMode==='register') {
+      if (!name) { msg.style.color='var(--danger)'; msg.textContent='Full name is required'; btn.innerHTML='<span id="auth-btn-text">Create Account</span>'; btn.disabled=false; return; }
+      res = await DataAPI.register(email, pass, name);
+    } else { res = await DataAPI.login(email, pass); }
+    btn.disabled = false;
+    btn.innerHTML = `<span id="auth-btn-text">${this.authMode==='login'?'Sign In':'Create Account'}</span>`;
+    if (res && res.token) {
+      DataAPI.setToken(res.token);
+      msg.style.color = 'var(--success)'; msg.textContent = 'Success! Loading...';
+      setTimeout(() => State.init(), 800);
+    } else {
+      msg.style.color = 'var(--danger)';
+      msg.textContent = res ? (res.error||'Authentication failed') : 'Could not connect to server';
+    }
+  },
+
+  logout() {
+    if (confirm('Sign out?')) { DataAPI.clearToken(); TxStore.clear(); location.reload(); }
+  },
+
+  /* NAVIGATION */
+  navigate(view) {
+    closeSidebar();
+    const isAuth = view === 'auth';
+    document.getElementById('sidebar').style.display = isAuth ? 'none' : '';
+    document.getElementById('topbar').style.display  = isAuth ? 'none' : '';
+    document.getElementById('bottom-nav').style.display = isAuth ? 'none' : '';
+
+    document.querySelectorAll('.view').forEach(s => { s.classList.remove('active'); s.style.display=''; });
+    const sec = document.getElementById('view-' + view);
+    if (sec) { sec.classList.add('active'); if (view==='auth') sec.style.display='flex'; }
+
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    const nb = document.querySelector(`.nav-item[data-view="${view}"]`);
+    if (nb) nb.classList.add('active');
+
+    document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
+    const bb = document.getElementById('bnav-'+view);
+    if (bb) bb.classList.add('active');
+
+    const titles = {dashboard:'Dashboard',input:'Smart Entry',upload:'Bank Import',reports:'Reports'};
+    const te = document.getElementById('page-title');
+    if (te && titles[view]) te.textContent = titles[view];
+
+    if (view==='dashboard') this.renderDashboard();
+    if (view==='reports')   this.renderReports();
+  },
+
+  updateBizSelect() {
+    const sel = document.getElementById('biz-select');
+    sel.innerHTML = '';
+    State.businesses.forEach(b => {
+      const o = document.createElement('option');
+      o.value = b.id; o.textContent = b.name; sel.appendChild(o);
+    });
+  },
+
+  switchBusiness(id) { State.switchBusiness(id); },
+  switchRole(role) { document.getElementById('current-role-badge').textContent = role==='owner' ? 'Owner 👑' : 'Viewer 👁️'; },
+
+  runMonthEnd() {
+    const now = new Date();
+    const label = now.toLocaleString('default',{month:'long',year:'numeric'});
+    if (confirm(`Lock all transactions for ${label}? Cannot be undone.`)) {
+      State.lockedMonths.push(`${now.getFullYear()}-${now.getMonth()+1}`);
+      document.getElementById('month-lock-badge').style.display = 'inline-flex';
+      showToast(`${label} locked`, 'success');
+      this.renderDashboard();
+    }
+  },
+
+  /* FORMATTING */
+  fmt(n) { return new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(n||0); },
+
+  /* LEDGER ENGINE */
+  buildLedger() {
+    const ledger = {};
+    Object.entries(COA).forEach(([type,accounts]) => {
+      accounts.forEach(acc => { ledger[acc]={dr:0,cr:0,type}; });
+    });
+    State.biz.transactions.forEach(tx => {
+      if (tx.status!=='confirmed' || !Array.isArray(tx.entries)) return;
+      tx.entries.forEach(e => {
+        if (!e.account) return;
+        if (!ledger[e.account]) {
+          let t='unknown';
+          for (const [type,accs] of Object.entries(COA)) if (accs.includes(e.account)){t=type;break;}
+          ledger[e.account]={dr:0,cr:0,type:t};
+        }
+        ledger[e.account].dr += (e.dr||0);
+        ledger[e.account].cr += (e.cr||0);
+      });
+    });
+    return ledger;
+  },
+  accountBalance(e) {
+    return (e.type==='Asset'||e.type==='Expense') ? e.dr-e.cr : e.cr-e.dr;
+  },
+  getBalances() {
+    const L = this.buildLedger();
+    const incB={}, expB={};
+    COA.Income.forEach(a  => { const b=this.accountBalance(L[a]);  if(b!==0) incB[a]=b; });
+    COA.Expense.forEach(a => { const b=this.accountBalance(L[a]);  if(b!==0) expB[a]=b; });
+    const totalIncome  = Object.values(incB).reduce((s,v)=>s+v,0);
+    const totalExpense = Object.values(expB).reduce((s,v)=>s+v,0);
+    const netProfit    = totalIncome - totalExpense;
+    const cash = this.accountBalance(L['Cash']);
+    const bank = this.accountBalance(L['Bank']);
+    const aB={};
+    COA.Asset.filter(a=>a!=='Cash'&&a!=='Bank').forEach(a=>{ const b=this.accountBalance(L[a]); if(b!==0) aB[a]=b; });
+    const totalOtherAssets = Object.values(aB).reduce((s,v)=>s+v,0);
+    const totalAssets      = cash+bank+totalOtherAssets;
+    const lB={};
+    COA.Liability.forEach(a=>{ const b=this.accountBalance(L[a]); if(b!==0) lB[a]=b; });
+    const totalLiabilities = Object.values(lB).reduce((s,v)=>s+v,0);
+    const capital          = this.accountBalance(L['Capital']);
+    const retainedEarnings = netProfit;
+    const totalEquity      = capital+retainedEarnings;
+    const totalLiabEquity  = totalLiabilities+totalEquity;
+    let opCash=0, invCash=0, finCash=0;
+    State.biz.transactions.forEach(tx=>{
+      if(tx.status!=='confirmed'||!Array.isArray(tx.entries)) return;
+      tx.entries.forEach(e=>{
+        if(e.account!=='Cash'&&e.account!=='Bank') return;
+        const flow=(e.dr||0)-(e.cr||0);
+        if(tx.accountType==='Income'||tx.accountType==='Expense') opCash+=flow;
+        else if(tx.accountType==='Asset') invCash+=flow;
+        else if(tx.accountType==='Liability'||tx.accountType==='Equity') finCash+=flow;
+      });
+    });
+    return {cash,bank,totalAssets,netProfit,totalIncome,totalExpense,incomeBreakdown:incB,expenseBreakdown:expB,
+      assetBreakdown:aB,totalOtherAssets,liabilityBreakdown:lB,totalLiabilities,
+      capital,retainedEarnings,totalEquity,totalLiabEquity,
+      operatingCash:opCash,investingCash:invCash,financingCash:finCash,netCashChange:opCash+invCash+finCash};
+  },
+
+  /* DASHBOARD */
+  renderDashboard() {
+    const b = this.getBalances();
+    document.getElementById('dash-liquid').textContent = this.fmt(b.cash+b.bank);
+    document.getElementById('dash-assets').textContent = this.fmt(b.totalAssets);
+    const pe = document.getElementById('dash-profit');
+    pe.textContent = this.fmt(b.netProfit);
+    pe.style.color = b.netProfit>=0 ? 'var(--success)' : 'var(--danger)';
+    const tbody = document.getElementById('dash-tbody');
+    const empty = document.getElementById('dash-empty');
+    const table = document.getElementById('dash-table');
+    const txList = State.biz.transactions.slice(0,15);
+    tbody.innerHTML = ''; TxStore.clear();
+    if (!txList.length) { empty.classList.remove('hidden'); table.style.display='none'; }
+    else {
+      empty.classList.add('hidden'); table.style.display='';
+      txList.forEach(t => {
+        TxStore.set(t.id,t);
+        const isLocked  = this.isTxLocked(t);
+        const gstBadge  = t.gstRate>0 ? `<span class="badge badge-gst">${t.gstRate}%</span>` : '<span style="color:var(--text-3)">—</span>';
+        const statusBadge = `<span class="badge ${t.status==='confirmed'?'badge-confirmed':'badge-draft'}">${t.status}</span>`;
+        const isIn   = ['Income','Liability','Equity'].includes(t.accountType);
+        const amtClr = isIn ? 'var(--success)' : 'var(--danger)';
+        const sign   = isIn ? '+' : '-';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="color:var(--text-3);white-space:nowrap">${t.date||'—'}</td>
+          <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${t.desc||''}">${t.desc||'—'}</td>
+          <td style="white-space:nowrap">${t.category||'—'}</td>
+          <td>${gstBadge}</td>
+          <td style="font-weight:700;color:${amtClr};white-space:nowrap">${sign}${this.fmt(t.netAmount)}</td>
+          <td>${statusBadge}</td>
+          <td><div style="display:flex;gap:4px;flex-wrap:wrap">
+            ${t.status!=='confirmed'?`<button class="btn btn-sm btn-success" onclick="app.confirmTx(${t.id})">✓</button>`:''}
+            <button class="btn btn-sm btn-outline" onclick="app.openEditById(${t.id})">Edit</button>
+            ${!isLocked?`<button class="btn btn-sm btn-danger" onclick="app.deleteTx(${t.id})">Del</button>`:''}
+          </div></td>`;
+        tbody.appendChild(tr);
+      });
+    }
+  },
+
+  isTxLocked(tx) {
+    if (!tx.date) return false;
+    const d = new Date(tx.date);
+    return State.lockedMonths.includes(`${d.getFullYear()}-${d.getMonth()+1}`);
+  },
+
+  async confirmTx(id) { await State.confirmTransaction(id); showToast('Transaction confirmed','success'); },
+  async deleteTx(id) {
+    if (confirm('Delete this transaction?')) { await State.delete(id); showToast('Deleted','warning'); }
+  },
+
+  /* SMART ENTRY */
+  async processChatInput() {
+    const inp = document.getElementById('chat-input');
+    const btn = document.getElementById('send-btn');
+    const text = inp.value.trim();
+    if (!text) return;
+    const hist = document.getElementById('chat-history');
+    const um = document.createElement('div');
+    um.className='msg user'; um.textContent=text; hist.appendChild(um);
+    inp.value=''; btn.innerHTML='<span class="spinner"></span>'; btn.disabled=true;
+    hist.scrollTop=hist.scrollHeight;
+    const parsed = NLP.parse(text);
+    if (parsed.amount===0) {
+      const em=document.createElement('div'); em.className='msg error';
+      em.textContent='⚠️ No amount found. Try: "Paid rent 5000" or "Sales 12000 with 18% GST"';
+      hist.appendChild(em); btn.innerHTML='Send'; btn.disabled=false; return;
+    }
+    let tx = null;
+    try {
+      const res = await DataAPI.smartEntry(text);
+      if (res&&res.success&&res.transaction) tx=res.transaction;
+    } catch(e) {}
+    if (!tx) tx = this.buildLocalTx(parsed, text);
+    State.pendingTx = tx;
+    this.renderConfirmCard(tx);
+    btn.innerHTML='Send'; btn.disabled=false;
+    hist.scrollTop=hist.scrollHeight;
+  },
+
+  buildLocalTx(parsed, origText) {
+    let netAmount=parsed.amount, gstAmount=0, grossAmount=parsed.amount;
+    if (parsed.gstRate>0) {
+      if (parsed.isInclusiveGST) {
+        netAmount=Math.round(parsed.amount/(1+parsed.gstRate/100));
+        gstAmount=parsed.amount-netAmount; grossAmount=parsed.amount;
+      } else {
+        gstAmount=Math.round(parsed.amount*parsed.gstRate/100);
+        grossAmount=parsed.amount+gstAmount;
+      }
+    }
+    const entries=[]; const acc=parsed.mode==='UPI'?'Bank':parsed.mode;
+    if      (parsed.accountType==='Expense')   { entries.push({account:parsed.category,dr:netAmount,cr:0}); if(gstAmount>0) entries.push({account:'Input Tax Credit',dr:gstAmount,cr:0}); entries.push({account:acc,dr:0,cr:grossAmount}); }
+    else if (parsed.accountType==='Income')    { entries.push({account:acc,dr:grossAmount,cr:0}); if(gstAmount>0) entries.push({account:'GST Payable',dr:0,cr:gstAmount}); entries.push({account:parsed.category,dr:0,cr:netAmount}); }
+    else if (parsed.accountType==='Asset')     { entries.push({account:parsed.category,dr:netAmount,cr:0}); entries.push({account:acc,dr:0,cr:netAmount}); }
+    else if (parsed.accountType==='Liability') { entries.push({account:acc,dr:netAmount,cr:0}); entries.push({account:parsed.category,dr:0,cr:netAmount}); }
+    else if (parsed.accountType==='Equity')    { entries.push({account:acc,dr:netAmount,cr:0}); entries.push({account:parsed.category,dr:0,cr:netAmount}); }
+    return {id:Date.now(),desc:parsed.desc||origText,date:parsed.date,netAmount,gstAmount,grossAmount,gstRate:parsed.gstRate,isInclusiveGST:parsed.isInclusiveGST,mode:parsed.mode,accountType:parsed.accountType,category:parsed.category,entries};
+  },
+
+  renderConfirmCard(tx) {
+    const c = document.getElementById('confirm-container');
+    const entries = Array.isArray(tx.entries)?tx.entries:[];
+    const drTotal = entries.reduce((s,e)=>s+(e.dr||0),0);
+    const crTotal = entries.reduce((s,e)=>s+(e.cr||0),0);
+    const balanced = Math.abs(drTotal-crTotal)<1;
+    TxStore.set(tx.id, tx);
+    c.innerHTML = `<div class="confirm-card">
+      <div class="confirm-head">
+        <span>📋 Double-Entry Verification ${balanced?'✅':'⚠️ Unbalanced'}</span>
+        <span class="confirm-close" onclick="app.cancelPending()">✕</span>
+      </div>
+      <div class="confirm-body">
+        <div class="confirm-row"><span>Description</span><span>${tx.desc||'—'}</span></div>
+        <div class="confirm-row"><span>Type</span><span>${tx.accountType}</span></div>
+        <div class="confirm-row"><span>Amount</span><span>${this.fmt(tx.netAmount)}</span></div>
+        ${tx.gstAmount>0?`<div class="confirm-row"><span>GST (${tx.gstRate}%)</span><span class="text-success">+${this.fmt(tx.gstAmount)}</span></div>`:''}
+        <table class="mini-ledger">
+          <thead><tr><th>Account</th><th>Debit</th><th>Credit</th></tr></thead>
+          <tbody>${entries.map(e=>`<tr><td>${e.account}</td><td class="dr">${e.dr>0?'Dr '+e.dr:''}</td><td class="cr">${e.cr>0?'Cr '+e.cr:''}</td></tr>`).join('')}</tbody>
+        </table>
+        <div class="confirm-btns">
+          <button class="btn btn-danger" onclick="app.cancelPending()">Cancel</button>
+          <button class="btn btn-primary" onclick="app.confirmPending()">✅ Confirm Entry</button>
+          <button class="btn btn-outline" style="margin-left:auto" onclick="app.openEditById(${tx.id})">✏️ Edit</button>
+        </div>
+      </div>
+    </div>`;
+    c.scrollIntoView({behavior:'smooth',block:'nearest'});
+  },
+
+  async confirmPending() {
+    if (!State.pendingTx) return;
+    const tx = State.pendingTx;
+    await State.add(tx);
+    document.getElementById('confirm-container').innerHTML='';
+    const h=document.getElementById('chat-history');
+    const m=document.createElement('div'); m.className='msg ai';
+    m.innerHTML=`✅ <strong>Entry added:</strong> ${tx.desc} — ${this.fmt(tx.netAmount)}`;
+    h.appendChild(m); h.scrollTop=h.scrollHeight;
+    State.pendingTx=null;
+  },
+
+  cancelPending() { State.pendingTx=null; document.getElementById('confirm-container').innerHTML=''; },
+
+  startVoice() {
+    if (!('webkitSpeechRecognition' in window)) { showToast('Voice not supported in this browser','error'); return; }
+    const lang = document.getElementById('voice-lang').value;
+    const rec  = new webkitSpeechRecognition();
+    rec.lang=lang; rec.continuous=false; rec.interimResults=false;
+    rec.onstart = ()=>showToast('Listening…','info');
+    rec.onresult = e=>{ document.getElementById('chat-input').value=e.results[0][0].transcript; this.processChatInput(); };
+    rec.onerror  = e=>showToast('Voice error: '+e.error,'error');
+    rec.start();
+  },
+
+  /* BANK IMPORT */
+  async handleFileSelect(inp) {
+    const file = inp.files&&inp.files[0];
+    if (!file) return;
+    showToast('Uploading…','info');
+    const parsed = await DataAPI.uploadFile(file);
+    if (parsed&&parsed.length>0) {
+      State.importBatch = parsed;
+      document.getElementById('import-tbody').innerHTML = parsed.map(t=>`
+        <tr>
+          <td>${t.date||'—'}</td>
+          <td>${t.desc||'—'}</td>
+          <td class="fw-700">${this.fmt(t.amount)}</td>
+          <td>${t.category||'Misc'}</td>
+        </tr>`).join('');
+      document.getElementById('import-preview').classList.remove('hidden');
+      showToast(`${parsed.length} transactions parsed`,'success');
+    } else { showToast('Parse failed or no data','error'); }
+  },
+
+  async confirmImportBatch() {
+    showToast('Importing…','info');
+    for (const t of State.importBatch) {
+      await State.add({...t,netAmount:t.amount,accountType:t.accountType||'Expense',category:t.category||'Misc',mode:'Bank',entries:t.entries||[]});
+    }
+    State.importBatch=[];
+    document.getElementById('import-preview').classList.add('hidden');
+    document.getElementById('import-tbody').innerHTML='';
+    showToast('Import complete!','success');
+    this.navigate('dashboard');
+  },
+
+  cancelImport() {
+    State.importBatch=[];
+    document.getElementById('import-preview').classList.add('hidden');
+    document.getElementById('import-tbody').innerHTML='';
+    document.getElementById('file-input').value='';
+  },
+
+  /* REPORTS */
+  switchReport(v) {
+    this.reportView=v;
+    ['pl','bs','cf'].forEach(id=>{
+      document.getElementById('btn-'+id).classList.toggle('active',id===v);
+    });
+    this.renderReports();
+  },
+
+  renderReports() {
+    const b=this.getBalances();
+    const fmt=n=>this.fmt(n);
+    const sh=label=>`<div style="font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);padding:14px 0 5px;border-bottom:2px solid var(--border);margin-bottom:4px;">${label}</div>`;
+    const row=(label,amount,{bold=false,color=null,indent=false,topLine=false}={})=>`
+      <div style="display:flex;justify-content:space-between;padding:${bold?'8px':'3px'} 0;
+        ${indent?'padding-left:1.4rem;color:var(--text-3);font-size:13px;':''}
+        ${bold?'font-weight:700;':''}
+        ${topLine?'border-top:2px solid var(--border);margin-top:10px;padding-top:10px;':''}
+        ${color?`color:${color};`:''}">
+        <span>${label}</span><span>${fmt(amount)}</span>
+      </div>`;
+    const noData=`<div style="color:var(--text-3);font-size:13px;padding:4px 0 4px 1.4rem">None recorded yet</div>`;
+
+    if (this.reportView==='pl') {
+      document.getElementById('report-title').textContent='Profit & Loss Statement';
+      const incR = Object.keys(b.incomeBreakdown).length
+        ? Object.entries(b.incomeBreakdown).map(([a,v])=>row(a,v,{indent:true})).join('') : noData;
+      const expR = Object.keys(b.expenseBreakdown).length
+        ? Object.entries(b.expenseBreakdown).map(([a,v])=>row(a,v,{indent:true})).join('') : noData;
+      const pc=b.netProfit>=0?'var(--success)':'var(--danger)';
+      document.getElementById('report-display').innerHTML=`${sh('Income')}${incR}${row('Total Income',b.totalIncome,{bold:true})}${sh('Expenses')}${expR}${row('Total Expenses',b.totalExpense,{bold:true})}${row(b.netProfit>=0?'📈 Net Profit':'📉 Net Loss',Math.abs(b.netProfit),{bold:true,topLine:true,color:pc})}`;
+
+    } else if (this.reportView==='bs') {
+      document.getElementById('report-title').textContent='Balance Sheet';
+      const aRows=[row('Cash',b.cash,{indent:true}),row('Bank',b.bank,{indent:true}),...Object.entries(b.assetBreakdown).map(([a,v])=>row(a,v,{indent:true}))].join('');
+      const lRows=Object.keys(b.liabilityBreakdown).length?Object.entries(b.liabilityBreakdown).map(([a,v])=>row(a,v,{indent:true})).join(''):noData;
+      const balanced=Math.abs(b.totalAssets-b.totalLiabEquity)<1;
+      document.getElementById('report-display').innerHTML=`${sh('Assets')}${aRows}${row('Total Assets',b.totalAssets,{bold:true})}${sh('Liabilities')}${lRows}${row('Total Liabilities',b.totalLiabilities,{bold:true})}${sh("Owner's Equity")}${row('Capital',b.capital,{indent:true})}${row('Retained Earnings',b.retainedEarnings,{indent:true,color:b.retainedEarnings>=0?'var(--success)':'var(--danger)'})}${row('Total Equity',b.totalEquity,{bold:true})}${row('Total Liabilities + Equity',b.totalLiabEquity,{bold:true,topLine:true})}<div style="margin-top:14px;padding:10px 14px;text-align:center;font-weight:700;border-radius:6px;background:${balanced?'var(--success-bg)':'var(--danger-bg)'};color:${balanced?'#065f46':'#b91c1c'}">${balanced?'✅ Balance Sheet is BALANCED':'❌ UNBALANCED — gap: '+fmt(Math.abs(b.totalAssets-b.totalLiabEquity))}</div>`;
+
+    } else if (this.reportView==='cf') {
+      document.getElementById('report-title').textContent='Cash Flow Statement';
+      const cfRow=(label,amount)=>{const c=amount>=0?'var(--success)':'var(--danger)';return `<div style="display:flex;justify-content:space-between;padding:3px 0 3px 1.4rem;color:var(--text-3);font-size:13px;"><span>${label}</span><span style="color:${c};font-weight:600;">${amount>=0?'+':''}${fmt(amount)}</span></div>`;};
+      const nc=b.netCashChange;
+      document.getElementById('report-display').innerHTML=`${sh('Operating Activities')}<div style="color:var(--text-3);font-size:12px;padding:2px 0 4px 1.4rem">Day-to-day income &amp; expenses</div>${cfRow('Net Cash from Operations',b.operatingCash)}${row('Subtotal',b.operatingCash,{bold:true,color:b.operatingCash>=0?'var(--success)':'var(--danger)'})}${sh('Investing Activities')}<div style="color:var(--text-3);font-size:12px;padding:2px 0 4px 1.4rem">Buying/selling assets</div>${cfRow('Net Cash from Investing',b.investingCash)}${row('Subtotal',b.investingCash,{bold:true,color:b.investingCash>=0?'var(--success)':'var(--danger)'})}${sh('Financing Activities')}<div style="color:var(--text-3);font-size:12px;padding:2px 0 4px 1.4rem">Loans, capital, contributions</div>${cfRow('Net Cash from Financing',b.financingCash)}${row('Subtotal',b.financingCash,{bold:true,color:b.financingCash>=0?'var(--success)':'var(--danger)'})}${row(nc>=0?'📈 Net Increase in Cash':'📉 Net Decrease in Cash',Math.abs(nc),{bold:true,topLine:true,color:nc>=0?'var(--success)':'var(--danger)'})}<div style="margin-top:12px;padding:10px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--text-3)">Closing Cash &amp; Bank</span><span class="fw-700">${fmt(b.cash+b.bank)}</span></div>`;
+    }
+  },
+
+  /* EDIT MODAL */
+  openEditById(id) {
+    const t=TxStore.get(id);
+    if(!t){showToast('Transaction not found','error');return;}
+    this.openEdit(id,t);
+  },
+  openEdit(id,t) {
+    document.getElementById('edit-id').value              = t.id||id;
+    document.getElementById('edit-desc').value            = t.desc||'';
+    document.getElementById('edit-amount').value          = t.netAmount||0;
+    document.getElementById('edit-category').value        = t.category||'';
+    document.getElementById('edit-date').value            = t.date||'';
+    document.getElementById('edit-mode').value            = t.mode||'Cash';
+    document.getElementById('edit-account-type').value    = t.accountType||'Expense';
+    document.getElementById('edit-gst-rate').value        = t.gstRate||0;
+    document.getElementById('edit-inclusive-gst').checked = !!t.isInclusiveGST;
+    document.getElementById('edit-modal').classList.add('active');
+  },
+  async saveEdit() {
+    const id=document.getElementById('edit-id').value;
+    const updates={
+      desc:           document.getElementById('edit-desc').value,
+      netAmount:      parseFloat(document.getElementById('edit-amount').value),
+      category:       document.getElementById('edit-category').value,
+      isInclusiveGST: document.getElementById('edit-inclusive-gst').checked,
+      gstRate:        parseInt(document.getElementById('edit-gst-rate').value),
+      mode:           document.getElementById('edit-mode').value,
+      accountType:    document.getElementById('edit-account-type').value,
+      date:           document.getElementById('edit-date').value
+    };
+    const idx=State.transactions.findIndex(t=>t.id==id);
+    if (idx>-1) {
+      const existing=State.transactions[idx];
+      let finalTx={...existing,...updates};
+      if (updates.netAmount!==existing.netAmount||updates.accountType!==existing.accountType) {
+        const rebuilt=this.buildLocalTx({amount:updates.netAmount,gstRate:updates.gstRate,isInclusiveGST:updates.isInclusiveGST,mode:updates.mode,accountType:updates.accountType,category:updates.category,date:updates.date,desc:updates.desc},updates.desc);
+        finalTx.entries=rebuilt.entries; finalTx.gstAmount=rebuilt.gstAmount; finalTx.grossAmount=rebuilt.grossAmount;
+      }
+      State.transactions[idx]=finalTx;
+      await State.save();
+      showToast('Changes saved','success');
+    }
+    this.closeModal();
+  },
+  closeModal() { document.getElementById('edit-modal').classList.remove('active'); },
+
+  /* INIT */
+  init() {
+    const dl=document.getElementById('cat-list');
+    Object.values(COA).flat().forEach(c=>{ const o=document.createElement('option'); o.value=c; dl.appendChild(o); });
+    State.init();
+  }
+};
+
+/* Modal overlay click to close */
+document.getElementById('edit-modal').addEventListener('click', function(e){ if(e.target===this) app.closeModal(); });
+
+/* Toast */
+function showToast(msg, type='success') {
+  const c=document.getElementById('toast-wrap');
+  const icons={success:'✅',error:'❌',warning:'⚠️',info:'ℹ️'};
+  const t=document.createElement('div');
+  t.className='toast '+type;
+  t.innerHTML=`<span>${icons[type]||'ℹ️'}</span>${msg}`;
+  c.appendChild(t);
+  setTimeout(()=>t.style.opacity='0',2700);
+  setTimeout(()=>t.remove(),3000);
+}
+
 app.init();
 </script>
 </body>

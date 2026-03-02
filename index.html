@@ -260,13 +260,25 @@ html, body {
 
 /* ── CONTENT ──────────────────────────────────── */
 #content {
-  flex: 1; overflow-y: auto;
+  flex: 1;
+  overflow-y: auto;
   padding: 24px;
+  /* Important: when Smart Entry is active, JS removes padding/overflow */
+}
+
+/* Smart Entry gets special full-height treatment */
+#content.chat-mode {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* View sections */
 .view { display: none; }
 .view.active { display: block; }
+/* Smart Entry needs flex to fill height */
+#view-input.active { display: flex; flex-direction: column; flex: 1; height: 100%; min-height: 0; }
 
 /* ── CARDS ────────────────────────────────────── */
 .card {
@@ -435,14 +447,20 @@ input[type="date"], select {
 
 /* ── SMART ENTRY / CHAT ───────────────────────── */
 .chat-wrap {
-  display: flex; flex-direction: column;
-  height: calc(100vh - 104px);
-  max-width: 760px; margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  height: 100%;
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px 24px 0;
+  min-height: 0; /* critical for flex children to shrink */
 }
 .chat-history {
   flex: 1; overflow-y: auto;
   display: flex; flex-direction: column;
-  gap: 12px; padding: 4px 2px;
+  gap: 12px; padding: 4px 2px 8px;
   scroll-behavior: smooth;
 }
 .msg {
@@ -461,17 +479,37 @@ input[type="date"], select {
   background: var(--danger-bg); border: 1px solid #fecaca;
   color: #b91c1c; align-self: flex-start;
 }
+
+/* Chat input — always pinned at bottom of the chat wrap */
+.chat-input-wrap {
+  flex-shrink: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px 12px 0 0;
+  padding: 12px 14px;
+  padding-bottom: calc(14px + env(safe-area-inset-bottom));
+  margin-top: 10px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,.06);
+}
 .chat-input-row {
   display: flex; gap: 8px; align-items: center;
-  padding: 14px 0 0;
-  border-top: 1px solid var(--border);
-  margin-top: 12px;
 }
 .chat-input-row input[type="text"] {
   flex: 1; font-size: 14px;
   border-radius: 8px; padding: 10px 14px;
+  border: 1.5px solid var(--border);
+  background: var(--surface-2);
 }
-.chat-lang { width: 110px !important; flex-shrink: 0; }
+.chat-input-row input[type="text"]:focus {
+  border-color: var(--brand);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+}
+.chat-input-hint {
+  font-size: 11px; color: var(--text-3);
+  margin-bottom: 8px; padding: 0 2px;
+}
+.chat-lang { width: 100px !important; flex-shrink: 0; }
 
 /* Confirmation card */
 .confirm-card {
@@ -681,11 +719,13 @@ input[type="date"], select {
   .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   table { min-width: 560px; }
 
-  /* Chat */
-  .chat-wrap { height: calc(100dvh - 145px); }
-  .chat-input-row { flex-wrap: wrap; }
+  /* Chat input clears the bottom nav on mobile */
+  .chat-wrap { padding: 12px 14px 0; }
   .chat-input-row input[type="text"] { font-size: 16px; } /* stops iOS zoom */
-  .chat-lang { width: 100% !important; order: 3; }
+  .chat-input-wrap {
+    border-radius: 0;
+    padding-bottom: calc(68px + 12px + env(safe-area-inset-bottom));
+  }
 
   /* Confirm card full width */
   .confirm-card { width: 100%; }
@@ -968,16 +1008,19 @@ const NLP = {
             </div>
           </div>
           <div id="confirm-container"></div>
-          <div class="chat-input-row">
-            <button class="btn btn-outline btn-sm" onclick="app.startVoice()" title="Voice input">🎙️</button>
-            <input type="text" id="chat-input" list="cat-list"
-              placeholder="e.g. paid rent 5000 cash"
-              onkeypress="if(event.key==='Enter') app.processChatInput()">
-            <select class="chat-lang" id="voice-lang" style="width:110px;flex-shrink:0;">
-              <option value="en-IN">English</option>
-              <option value="hi-IN">हिंदी</option>
-            </select>
-            <button class="btn btn-primary" id="send-btn" onclick="app.processChatInput()">Send</button>
+          <div class="chat-input-wrap">
+            <div class="chat-input-hint">💬 Type a transaction or tap 🎙️ to speak</div>
+            <div class="chat-input-row">
+              <button class="btn btn-outline btn-sm" onclick="app.startVoice()" title="Voice input" style="padding:9px 11px;">🎙️</button>
+              <input type="text" id="chat-input" list="cat-list"
+                placeholder="e.g. paid rent 5000 cash"
+                onkeypress="if(event.key==='Enter') app.processChatInput()">
+              <select class="chat-lang" id="voice-lang">
+                <option value="en-IN">EN</option>
+                <option value="hi-IN">हिं</option>
+              </select>
+              <button class="btn btn-primary" id="send-btn" onclick="app.processChatInput()" style="padding:9px 16px;">Send ↵</button>
+            </div>
           </div>
         </div>
       </section>
@@ -1336,43 +1379,48 @@ const app = {
     if (confirm('Sign out?')) { DataAPI.clearToken(); TxStore.clear(); location.reload(); }
   },
 
-  /* NAVIGATION — uses explicit style.display to beat CSS specificity */
+  /* NAVIGATION */
   navigate(view) {
     closeSidebar();
     const isAuth = view === 'auth';
 
-    // Show/hide shell elements
-    const sidebar  = document.getElementById('sidebar');
-    const topbar   = document.getElementById('topbar');
-    const bottomNav = document.getElementById('bottom-nav');
-    if (sidebar)  sidebar.style.display  = isAuth ? 'none' : 'flex';
-    if (topbar)   topbar.style.display   = isAuth ? 'none' : 'flex';
-    if (bottomNav) bottomNav.style.display = isAuth ? 'none' : 'block';
+    // Shell elements
+    const sidebar = document.getElementById('sidebar');
+    const topbar  = document.getElementById('topbar');
+    if (sidebar) sidebar.style.display = isAuth ? 'none' : 'flex';
+    if (topbar)  topbar.style.display  = isAuth ? 'none' : 'flex';
+    // ⚠️ NEVER set bottom-nav display in JS — CSS media query controls it
 
-    // Explicitly hide ALL views (overrides any CSS including #id selectors)
+    // Chat mode: remove padding/overflow from #content for Smart Entry
+    const content = document.getElementById('content');
+    content.classList.toggle('chat-mode', view === 'input');
+
+    // Hide all views explicitly (beats any CSS specificity)
     document.querySelectorAll('.view').forEach(s => {
       s.style.display = 'none';
       s.classList.remove('active');
     });
 
-    // Show only the target view
+    // Show target view
     const sec = document.getElementById('view-' + view);
     if (sec) {
       sec.classList.add('active');
-      sec.style.display = view === 'auth' ? 'flex' : 'block';
+      if (view === 'auth')  sec.style.display = 'flex';
+      else if (view === 'input') sec.style.display = 'flex'; // flex for chat
+      else sec.style.display = 'block';
     }
 
-    // Update sidebar nav active state
+    // Sidebar nav highlight
     document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
     const nb = document.querySelector(`.nav-item[data-view="${view}"]`);
     if (nb) nb.classList.add('active');
 
-    // Update bottom nav active state
+    // Bottom nav highlight
     document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
     const bb = document.getElementById('bnav-' + view);
     if (bb) bb.classList.add('active');
 
-    // Update page title
+    // Page title
     const titles = { dashboard:'Dashboard', input:'Smart Entry', upload:'Bank Import', reports:'Reports' };
     const te = document.getElementById('page-title');
     if (te && titles[view]) te.textContent = titles[view];

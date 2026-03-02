@@ -1323,9 +1323,12 @@ const app = {
       }
 
       setTimeout(() => this.navigate('dashboard'), 400);
+    } else if (!res) {
+      msg.style.color = 'var(--warning)';
+      msg.textContent = '⏳ Server is starting up (free tier). Wait 30s and try again.';
     } else {
       msg.style.color = 'var(--danger)';
-      msg.textContent = res ? (res.error||'Authentication failed') : 'Could not connect to server';
+      msg.textContent = res.error || 'Login failed. Check your email and password.';
     }
   },
 
@@ -1773,42 +1776,32 @@ const app = {
 
   _pingServer() {
     const statusEl = document.getElementById('server-status');
-    const msgEl    = document.getElementById('auth-msg');
 
-    // Show "waking up" warning if server doesn't respond in 3s
+    // Use no-cors so CORS never blocks the wake-up ping
+    // We don't need the response — just need to wake Render up
+    const pingUrl = API_URL.replace('/api', '/');
+
+    // If no response in 4s, show gentle warning in status bar only
     const wakeTimer = setTimeout(() => {
-      if (statusEl) { statusEl.className = 'server-status syncing'; statusEl.textContent = 'Waking up…'; }
-      if (msgEl && !msgEl.textContent) {
-        let secs = 45;
-        msgEl.style.color = 'var(--warning)';
-        msgEl.textContent = `⏳ Server is waking up… (~${secs}s)`;
-        const tick = setInterval(() => {
-          secs--;
-          if (secs <= 0 || !msgEl.isConnected) { clearInterval(tick); return; }
-          // Only show if user hasn't started typing
-          const emailVal = document.getElementById('auth-email')?.value;
-          if (!emailVal) msgEl.textContent = `⏳ Server is waking up… (~${secs}s)`;
-        }, 1000);
+      if (statusEl) {
+        statusEl.className = 'server-status syncing';
+        statusEl.textContent = 'Waking…';
       }
-    }, 3000);
+    }, 4000);
 
-    // Actual ping
-    fetch(API_URL.replace('/api', '/'))
-      .then(res => {
+    fetch(pingUrl, { mode: 'no-cors' })
+      .then(() => {
         clearTimeout(wakeTimer);
-        if (statusEl) { statusEl.className = 'server-status online'; statusEl.textContent = 'Online'; }
-        if (msgEl && msgEl.textContent.includes('waking')) {
-          msgEl.style.color = 'var(--success)';
-          msgEl.textContent = '✅ Server is ready. You can log in!';
-          setTimeout(() => { if (msgEl.textContent.includes('ready')) msgEl.textContent = ''; }, 3000);
+        if (statusEl) {
+          statusEl.className = 'server-status online';
+          statusEl.textContent = 'Online';
         }
       })
       .catch(() => {
         clearTimeout(wakeTimer);
-        if (statusEl) { statusEl.className = 'server-status offline'; statusEl.textContent = 'Offline'; }
-        if (msgEl && !msgEl.textContent) {
-          msgEl.style.color = 'var(--danger)';
-          msgEl.textContent = '⚠️ Cannot reach server. Check your connection.';
+        if (statusEl) {
+          statusEl.className = 'server-status offline';
+          statusEl.textContent = 'Offline';
         }
       });
   },
@@ -1830,6 +1823,11 @@ function showToast(msg, type='success') {
 }
 
 app.init();
+
+// ── Keep Render awake — ping every 14 min (free tier sleeps at 15 min)
+setInterval(() => {
+  fetch(API_URL.replace('/api', '/'), { mode: 'no-cors' }).catch(() => {});
+}, 14 * 60 * 1000);
 </script>
 </body>
 </html>

@@ -784,57 +784,376 @@ input[type="date"], select {
 <body>
 
 <script>
+// ═══════════════════════════════════════════════════════════════
+// LEDGERLY ACCOUNTING ENGINE v2.0
+// Professional double-entry system — comparable to Zoho Books
+// ═══════════════════════════════════════════════════════════════
+
+// ── Chart of Accounts ───────────────────────────────────────────
 const COA = {
-  Asset:     ['Cash', 'Bank', 'Equipment', 'Input Tax Credit', 'Receivables'],
-  Liability: ['Term Loan', 'GST Payable', 'Vendor Payables'],
-  Income:    ['Sales', 'Service Income', 'Refunds'],
-  Expense:   ['Rent', 'Salary', 'Utilities', 'Office Supplies', 'Professional Fees'],
-  Equity:    ['Capital']
+  Asset:     ['Cash', 'Bank', 'Accounts Receivable', 'Inventory',
+              'Prepaid Expenses', 'Equipment', 'Furniture & Fixtures',
+              'Vehicles', 'Accumulated Depreciation',
+              'Input Tax Credit', 'Other Assets'],
+  Liability: ['Accounts Payable', 'GST Payable', 'Term Loan',
+              'Credit Card Payable', 'Salary Payable',
+              'Advance from Customer', 'Other Liabilities'],
+  Income:    ['Sales', 'Service Income', 'Interest Income',
+              'Discount Received', 'Other Income'],
+  Expense:   ['Cost of Goods Sold', 'Rent', 'Salary', 'Utilities',
+              'Office Supplies', 'Professional Fees', 'Marketing',
+              'Travel & Conveyance', 'Insurance', 'Interest Expense',
+              'Depreciation', 'Bank Charges', 'Miscellaneous Expense'],
+  Equity:    ['Capital', 'Retained Earnings', 'Drawings']
 };
 
-const NLP = {
-  parse(text) {
+// Account type lookup map for fast access
+const COA_TYPE = {};
+Object.entries(COA).forEach(([type, accounts]) => {
+  accounts.forEach(acc => { COA_TYPE[acc] = type; });
+});
+
+// ── Intent Engine ────────────────────────────────────────────────
+const IntentEngine = {
+
+  extractAmount(text) {
     const lower = text.toLowerCase();
-    let amount = 0;
-    const amtMatch = text.match(/(?:₹\s*)?(\d[\d,]*(?:\.\d{1,2})?)\s*k?/i);
-    if (amtMatch) {
-      amount = parseFloat(amtMatch[1].replace(/,/g,''));
-      if (/\bk\b/i.test(text)) amount *= 1000;
+    const lakhMatch = lower.match(/(\d+(?:\.\d+)?)\s*(?:lakh|lac)/);
+    if (lakhMatch) return parseFloat(lakhMatch[1]) * 100000;
+    const kMatch = text.match(/(\d+(?:\.\d+)?)\s*k\b/i);
+    if (kMatch) return parseFloat(kMatch[1]) * 1000;
+    const stdMatch = text.match(/(?:₹\s*|rs\.?\s*|inr\s*)?(\d[\d,]*(?:\.\d{1,2})?)/i);
+    if (stdMatch) return parseFloat(stdMatch[1].replace(/,/g,''));
+    return 0;
+  },
+
+  extractDate(text) {
+    const today = new Date().toISOString().split('T')[0];
+    if (/\byesterday\b/.test(text)) {
+      const d = new Date(); d.setDate(d.getDate()-1); return d.toISOString().split('T')[0];
     }
-    let date = new Date().toISOString().split('T')[0];
-    const dateMatch = text.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
-    if (dateMatch) {
-      const y = dateMatch[3] ? (dateMatch[3].length===2 ? '20'+dateMatch[3] : dateMatch[3]) : new Date().getFullYear();
-      date = `${y}-${String(dateMatch[2]).padStart(2,'0')}-${String(dateMatch[1]).padStart(2,'0')}`;
+    const m = text.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?/);
+    if (m) {
+      const y = m[3] ? (m[3].length===2 ? '20'+m[3] : m[3]) : new Date().getFullYear();
+      return `${y}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
     }
-    let gstRate = 0;
-    if (/18\s*%?\s*gst|gst\s*18/.test(lower)) gstRate = 18;
-    else if (/12\s*%?\s*gst|gst\s*12/.test(lower)) gstRate = 12;
-    else if (/28\s*%?\s*gst|gst\s*28/.test(lower)) gstRate = 28;
-    else if (/5\s*%?\s*gst|gst\s*5/.test(lower))  gstRate = 5;
-    const isInclusiveGST = /incl|inclusive|inc\.?\s*tax|with\s*gst/.test(lower);
-    let mode = 'Cash';
-    if (/\bupi\b|gpay|phonepe|paytm/.test(lower)) mode = 'UPI';
-    else if (/\bbank\b|\bneft\b|\brtgs\b|\bcheque\b|\bimps\b/.test(lower)) mode = 'Bank';
-    let accountType = 'Expense', category = 'Office Supplies';
-    const rules = [
-      { keys:['rent','office rent','shop rent'],           cat:'Rent',             type:'Expense'   },
-      { keys:['salary','salaries','wages','staff pay'],    cat:'Salary',           type:'Expense'   },
-      { keys:['electric','electricity','internet','wifi','phone bill','utility','utilities'], cat:'Utilities', type:'Expense' },
-      { keys:['professional fee','consultant','lawyer','ca fee','audit'], cat:'Professional Fees', type:'Expense' },
-      { keys:['office supply','stationery','supplies','printing'], cat:'Office Supplies', type:'Expense' },
-      { keys:['sales','sold','revenue','invoice raised','received payment'], cat:'Sales', type:'Income' },
-      { keys:['service income','service charge','service fee','project income'], cat:'Service Income', type:'Income' },
-      { keys:['refund received','refunded'],               cat:'Refunds',          type:'Income'    },
-      { keys:['equipment','laptop','computer','machine','furniture','ac ','printer'], cat:'Equipment', type:'Asset' },
-      { keys:['loan','borrowed','term loan'],              cat:'Term Loan',        type:'Liability' },
-      { keys:['capital','invested','owner contribution'],  cat:'Capital',          type:'Equity'    },
-    ];
-    for (const r of rules) {
-      if (r.keys.some(k => lower.includes(k))) { category = r.cat; accountType = r.type; break; }
+    return today;
+  },
+
+  extractGST(text) {
+    const lower = text.toLowerCase();
+    let rate = 0;
+    if (/28\s*%?\s*gst|gst\s*28/.test(lower))     rate = 28;
+    else if (/18\s*%?\s*gst|gst\s*18/.test(lower)) rate = 18;
+    else if (/12\s*%?\s*gst|gst\s*12/.test(lower)) rate = 12;
+    else if (/5\s*%?\s*gst|gst\s*5/.test(lower))   rate = 5;
+    const inclusive = /incl|inclusive|inc\.?\s*gst|with\s*gst|including\s*tax/.test(lower);
+    return { rate, inclusive };
+  },
+
+  extractMode(text) {
+    const lower = text.toLowerCase();
+    if (/\bupi\b|gpay|phonepe|paytm/.test(lower))                        return 'Bank';
+    if (/\bcheque\b|\bcheck\b|\bneft\b|\brtgs\b|\bimps\b/.test(lower))   return 'Bank';
+    if (/\bbank\b|\bonline\b|\btransfer\b/.test(lower))                   return 'Bank';
+    if (/\bcash\b/.test(lower))                                           return 'Cash';
+    return null;
+  },
+
+  detectIntent(text) {
+    const lower = text.toLowerCase();
+
+    // ═══════════════════════════════════════════════════════════════
+    // PRIORITY 1 — COMPOUND/SPECIFIC INTENTS (must come first)
+    // These are phrases that could be misread by simpler patterns below
+    // ═══════════════════════════════════════════════════════════════
+
+    // Credit Sale: "sold on credit", "invoice raised", "billed to customer"
+    if (/sold\s.{0,40}on\scredit|invoice\s+raised|billed\s+to|sales\s+on\s+credit|credit\s+sales?\b/.test(lower))
+      return { intent: 'CREDIT_SALE' };
+
+    // Credit Purchase: "purchased/bought/goods on credit", "on credit basis"
+    // Extended .{0,50} to handle long descriptions like "raw material worth ₹1,25,000 on credit"
+    if (/(?:purchased?|bought|procured|received\s+goods?|stock|goods?|material|inventory).{0,50}on\s+credit|on\s+credit\s+basis|credit\s+purchase/.test(lower))
+      return { intent: 'CREDIT_PURCHASE' };
+
+    // Pay Creditor/Supplier — handles all word orders:
+    // "paid supplier", "supplier paid", "paid to supplier", "payment to vendor"
+    if (/paid\s.{0,20}(?:supplier|vendor|creditor|party)|(?:supplier|vendor|creditor)\s+(?:paid|payment)|payment\s+to\s+(?:supplier|vendor|creditor)/.test(lower))
+      return { intent: 'PAY_CREDITOR' };
+
+    // Receive from debtor/customer
+    if (/received\s.{0,20}(?:payment|amount|cash|cheque|upi)\s.{0,20}from|collected\s+from|debtor\s+paid|customer\s+paid/.test(lower))
+      return { intent: 'RECEIPT_FROM_DEBTOR' };
+
+    // Loan RECEIVED — keyword "loan/borrowed" must appear, NOT just "credit"
+    // Rule: "credit" alone ≠ loan. Only explicit loan words trigger this.
+    if (/(?:loan|borrowed)\s+from\b|received\s+(?:a\s+)?(?:loan|term\s+loan)|term\s+loan\s+(?:taken|received|sanctioned)|bank\s+loan/.test(lower))
+      return { intent: 'LOAN_RECEIVED' };
+
+    // Loan Repayment: "repaid loan", "paid EMI", "loan repayment"
+    if (/(?:repaid|paid|cleared)\s+(?:the\s+)?(?:loan|emi|term\s+loan)|loan\s+(?:repayment|emi|instalment|installment)|emi\s+paid/.test(lower))
+      return { intent: 'LOAN_REPAYMENT' };
+
+    // Owner investment / capital contribution
+    if (/(?:invested|introduced|brought\s+in|owner\s+contribution|capital\s+(?:introduced|invested|contributed))/.test(lower))
+      return { intent: 'OWNER_INVESTMENT' };
+
+    // Drawings / owner withdrawal
+    if (/\bdrawings?\b|owner\s+withdrew|withdrew\s+for\s+(?:personal|self)|personal\s+(?:use|withdrawal)/.test(lower))
+      return { intent: 'DRAWINGS' };
+
+    // Advance from customer
+    if (/advance\s+(?:received|from\s+customer)|received\s+(?:an?\s+)?advance/.test(lower))
+      return { intent: 'ADVANCE_RECEIVED' };
+
+    // Asset Purchase — equipment/vehicle/furniture (NOT expense)
+    // Must check BEFORE generic "purchased/bought" expense pattern below
+    if (/(?:bought|purchased|acquired)\s.{0,30}(?:equipment|laptop|computer|vehicle|car|bike|truck|machinery|machine|furniture|fixtures?|ac\b|air\s*con|printer|server|phone|mobile\s+phone)|(?:equipment|laptop|computer|vehicle|car|furniture|machinery)\s+(?:bought|purchased|acquired)/.test(lower))
+      return { intent: 'ASSET_PURCHASE' };
+
+    // Depreciation
+    if (/\bdepreciation\b/.test(lower))
+      return { intent: 'DEPRECIATION' };
+
+    // GST payment to government
+    if (/paid\s+gst\b|gst\s+paid\b|gst\s+(?:payment|challan)|challan\s+paid/.test(lower))
+      return { intent: 'GST_PAYMENT' };
+
+    // Salary/wages — handles both "paid salary" and "salary 50000" (plain entry)
+    // "salary paid", "paid salary", "wages paid", "disbursed salary", or just "salary" alone
+    if (/(?:paid|disbursed)\s+(?:the\s+)?(?:salary|salaries|wages)|(?:salary|salaries|wages)\s+(?:paid|disbursed)|^salary\b|^salaries\b|^wages\b/.test(lower))
+      return { intent: 'SALARY_PAID' };
+
+    // Salary accrual (not yet paid)
+    if (/salary\s+(?:due|accrued|payable)|accrued\s+salary/.test(lower))
+      return { intent: 'SALARY_ACCRUAL' };
+
+    // ═══════════════════════════════════════════════════════════════
+    // PRIORITY 2 — INCOME
+    // ═══════════════════════════════════════════════════════════════
+
+    if (/\bsold\b|\bsales?\b|\brevenue\b|\bservice\s+(?:rendered|provided|income|charge)\b|\bbilled\b|\bconsultancy\b|\bproject\s+(?:income|completed)\b/.test(lower))
+      return { intent: 'CASH_SALE' };
+
+    if (/^received\b|\breceived\s+payment\b|\bpayment\s+received\b/.test(lower))
+      return { intent: 'CASH_SALE' };
+
+    // ═══════════════════════════════════════════════════════════════
+    // PRIORITY 3 — EXPENSES (specific to generic)
+    // ═══════════════════════════════════════════════════════════════
+
+    if (/\brent\b/.test(lower))
+      return { intent: 'EXPENSE', category: 'Rent' };
+
+    if (/\belectricity\b|\belectric\b|\bpower\s+bill\b|\beb\s+bill\b/.test(lower))
+      return { intent: 'EXPENSE', category: 'Utilities' };
+
+    if (/\binternet\b|\bwifi\b|\bbroadband\b|\bfibre\b/.test(lower))
+      return { intent: 'EXPENSE', category: 'Utilities' };
+
+    if (/\bphone\s+bill\b|\bmobile\s+bill\b|\btelephone\b/.test(lower))
+      return { intent: 'EXPENSE', category: 'Utilities' };
+
+    if (/\boffice\s+supplies?\b|\bstationery\b|\bprinting\b/.test(lower))
+      return { intent: 'EXPENSE', category: 'Office Supplies' };
+
+    if (/\bprofessional\s+fees?\b|\bca\s+fees?\b|\baudit\b|\blawyer\b|\bconsultant\b/.test(lower))
+      return { intent: 'EXPENSE', category: 'Professional Fees' };
+
+    if (/\bmarketing\b|\badvertising\b|\bad\s+spend\b|\bpromotion\b/.test(lower))
+      return { intent: 'EXPENSE', category: 'Marketing' };
+
+    if (/\btravel\b|\bconveyance\b|\bfuel\b|\bpetrol\b|\bdiesel\b|\btaxi\b|\buber\b|\bolt\b/.test(lower))
+      return { intent: 'EXPENSE', category: 'Travel & Conveyance' };
+
+    if (/\binsurance\b/.test(lower))
+      return { intent: 'EXPENSE', category: 'Insurance' };
+
+    if (/\bbank\s+charges?\b|\bprocessing\s+fee\b/.test(lower))
+      return { intent: 'EXPENSE', category: 'Bank Charges' };
+
+    if (/\binterest\s+(?:on\s+loan|expense|paid)\b/.test(lower))
+      return { intent: 'EXPENSE', category: 'Interest Expense' };
+
+    if (/\brepair\b|\bmaintenance\b/.test(lower))
+      return { intent: 'EXPENSE', category: 'Miscellaneous Expense' };
+
+    // Generic purchase/bought → Cost of Goods Sold (only if not asset and not on credit — already handled above)
+    if (/\bpurchased?\b|\bbought\b|\bprocured\b/.test(lower))
+      return { intent: 'EXPENSE', category: 'Cost of Goods Sold' };
+
+    // Generic "paid X" — fallback expense
+    if (/\bpaid\b/.test(lower))
+      return { intent: 'EXPENSE', category: 'Miscellaneous Expense' };
+
+    // Salary mentioned without any verb (e.g. "salary 50000")
+    if (/\bsalary\b|\bwages\b/.test(lower))
+      return { intent: 'SALARY_PAID' };
+
+    return { intent: 'EXPENSE', category: 'Miscellaneous Expense' };
+  },
+
+  cleanDesc(text) {
+    return text
+      .replace(/(?:₹|rs\.?\s*|inr\s*)?\d[\d,]*(?:\.\d{1,2})?\s*(?:k|lakh|lac)?\b/gi,'')
+      .replace(/\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?/g,'')
+      .replace(/\s{2,}/g,' ').trim() || text.trim();
+  },
+
+  parse(text) {
+    return {
+      amount: this.extractAmount(text),
+      date:   this.extractDate(text),
+      gst:    this.extractGST(text),
+      mode:   this.extractMode(text),
+      intent: this.detectIntent(text),
+      desc:   this.cleanDesc(text),
+      raw:    text
+    };
+  }
+};
+
+// Alias for backwards compatibility
+const NLP = { parse: (text) => IntentEngine.parse(text) };
+
+// ── Journal Generator ────────────────────────────────────────────
+const JournalGenerator = {
+
+  calcGST(amount, rate, inclusive) {
+    if (!rate) return { net:amount, gst:0, gross:amount };
+    if (inclusive) {
+      const net = Math.round(amount * 100 / (100 + rate));
+      return { net, gst: amount-net, gross: amount };
     }
-    const desc = text.replace(/(?:₹\s*)?\d[\d,]*(?:\.\d{1,2})?\s*k?/i,'').replace(/\d{1,2}[\/\-]\d{1,2}(?:[\/\-]\d{2,4})?/,'').trim() || text.trim();
-    return { amount, date, desc, gstRate, isInclusiveGST, mode, accountType, category };
+    const gst = Math.round(amount * rate / 100);
+    return { net:amount, gst, gross:amount+gst };
+  },
+
+  cashAcc(mode) { return (mode==='Bank'||!mode) ? 'Bank' : 'Cash'; },
+
+  validate(lines) {
+    const dr = lines.reduce((s,l)=>s+(l.dr||0),0);
+    const cr = lines.reduce((s,l)=>s+(l.cr||0),0);
+    return Math.abs(dr-cr) <= 0.5;
+  },
+
+  generate(parsed) {
+    const { amount, date, gst, mode, intent, desc } = parsed;
+    if (!amount || amount<=0) return null;
+    const { net, gst:gstAmt, gross } = this.calcGST(amount, gst.rate, gst.inclusive);
+    const cash = this.cashAcc(mode);
+    const { intent:intentType, category } = intent;
+    let lines = [], txMeta = { accountType:'Expense', category:'Miscellaneous Expense' };
+
+    switch(intentType) {
+      case 'CASH_SALE': {
+        const cat = /service|consulting|project|fees?/.test(parsed.raw.toLowerCase()) ? 'Service Income' : 'Sales';
+        lines = [{ account:cash, dr:gross, cr:0 }, { account:cat, dr:0, cr:net }];
+        if (gstAmt>0) lines.push({ account:'GST Payable', dr:0, cr:gstAmt });
+        txMeta = { accountType:'Income', category:cat }; break;
+      }
+      case 'CREDIT_SALE': {
+        const cat = /service/.test(parsed.raw.toLowerCase()) ? 'Service Income' : 'Sales';
+        lines = [{ account:'Accounts Receivable', dr:gross, cr:0 }, { account:cat, dr:0, cr:net }];
+        if (gstAmt>0) lines.push({ account:'GST Payable', dr:0, cr:gstAmt });
+        txMeta = { accountType:'Asset', category:'Accounts Receivable' }; break;
+      }
+      case 'RECEIPT_FROM_DEBTOR': {
+        lines = [{ account:cash, dr:amount, cr:0 }, { account:'Accounts Receivable', dr:0, cr:amount }];
+        txMeta = { accountType:'Asset', category:'Cash' }; break;
+      }
+      case 'EXPENSE': {
+        const expCat = category||'Miscellaneous Expense';
+        lines = [{ account:expCat, dr:net, cr:0 }];
+        if (gstAmt>0) lines.push({ account:'Input Tax Credit', dr:gstAmt, cr:0 });
+        lines.push({ account:cash, dr:0, cr:gross });
+        txMeta = { accountType:'Expense', category:expCat }; break;
+      }
+      case 'CREDIT_PURCHASE': {
+        const lower = parsed.raw.toLowerCase();
+        const purCat = /equipment|laptop|computer|machine|vehicle|furniture/.test(lower) ? 'Equipment'
+          : /inventory|stock|goods|material/.test(lower) ? 'Inventory' : 'Cost of Goods Sold';
+        lines = [{ account:purCat, dr:net, cr:0 }];
+        if (gstAmt>0) lines.push({ account:'Input Tax Credit', dr:gstAmt, cr:0 });
+        lines.push({ account:'Accounts Payable', dr:0, cr:gross });
+        txMeta = { accountType:'Liability', category:'Accounts Payable' }; break;
+      }
+      case 'PAY_CREDITOR': {
+        lines = [{ account:'Accounts Payable', dr:amount, cr:0 }, { account:cash, dr:0, cr:amount }];
+        txMeta = { accountType:'Liability', category:'Accounts Payable' }; break;
+      }
+      case 'LOAN_RECEIVED': {
+        lines = [{ account:cash, dr:amount, cr:0 }, { account:'Term Loan', dr:0, cr:amount }];
+        txMeta = { accountType:'Liability', category:'Term Loan' }; break;
+      }
+      case 'LOAN_REPAYMENT': {
+        const intMatch = parsed.raw.match(/interest[^\d]*(\d[\d,]*)/i);
+        const intAmt = intMatch ? parseFloat(intMatch[1].replace(/,/g,'')) : 0;
+        const princAmt = amount - intAmt;
+        lines = [];
+        if (princAmt>0) lines.push({ account:'Term Loan', dr:princAmt, cr:0 });
+        if (intAmt>0)   lines.push({ account:'Interest Expense', dr:intAmt, cr:0 });
+        lines.push({ account:cash, dr:0, cr:amount });
+        txMeta = { accountType:'Liability', category:'Term Loan' }; break;
+      }
+      case 'ASSET_PURCHASE': {
+        const lower = parsed.raw.toLowerCase();
+        const assetAcc = /vehicle|car|bike/.test(lower) ? 'Vehicles'
+          : /furniture|fixture/.test(lower) ? 'Furniture & Fixtures' : 'Equipment';
+        const isCreditAsset = /on credit|on account/.test(lower);
+        lines = [{ account:assetAcc, dr:net, cr:0 }];
+        if (gstAmt>0) lines.push({ account:'Input Tax Credit', dr:gstAmt, cr:0 });
+        lines.push(isCreditAsset
+          ? { account:'Accounts Payable', dr:0, cr:gross }
+          : { account:cash,              dr:0, cr:gross });
+        txMeta = { accountType:'Asset', category:assetAcc }; break;
+      }
+      case 'DEPRECIATION': {
+        lines = [{ account:'Depreciation', dr:amount, cr:0 }, { account:'Accumulated Depreciation', dr:0, cr:amount }];
+        txMeta = { accountType:'Expense', category:'Depreciation' }; break;
+      }
+      case 'OWNER_INVESTMENT': {
+        lines = [{ account:cash, dr:amount, cr:0 }, { account:'Capital', dr:0, cr:amount }];
+        txMeta = { accountType:'Equity', category:'Capital' }; break;
+      }
+      case 'DRAWINGS': {
+        lines = [{ account:'Drawings', dr:amount, cr:0 }, { account:cash, dr:0, cr:amount }];
+        txMeta = { accountType:'Equity', category:'Drawings' }; break;
+      }
+      case 'GST_PAYMENT': {
+        lines = [{ account:'GST Payable', dr:amount, cr:0 }, { account:cash, dr:0, cr:amount }];
+        txMeta = { accountType:'Liability', category:'GST Payable' }; break;
+      }
+      case 'SALARY_PAID': {
+        lines = [{ account:'Salary', dr:amount, cr:0 }, { account:cash, dr:0, cr:amount }];
+        txMeta = { accountType:'Expense', category:'Salary' }; break;
+      }
+      case 'SALARY_ACCRUAL': {
+        lines = [{ account:'Salary', dr:amount, cr:0 }, { account:'Salary Payable', dr:0, cr:amount }];
+        txMeta = { accountType:'Expense', category:'Salary' }; break;
+      }
+      case 'ADVANCE_RECEIVED': {
+        lines = [{ account:cash, dr:amount, cr:0 }, { account:'Advance from Customer', dr:0, cr:amount }];
+        txMeta = { accountType:'Liability', category:'Advance from Customer' }; break;
+      }
+      default: {
+        lines = [{ account:'Miscellaneous Expense', dr:amount, cr:0 }, { account:cash, dr:0, cr:amount }];
+        txMeta = { accountType:'Expense', category:'Miscellaneous Expense' };
+      }
+    }
+
+    if (!this.validate(lines)) return null;
+
+    return {
+      id: Date.now(), desc: desc||parsed.raw, date,
+      netAmount: net, gstAmount: gstAmt, grossAmount: gross,
+      gstRate: gst.rate, isInclusiveGST: gst.inclusive,
+      mode: mode||(cash==='Bank'?'Bank':'Cash'),
+      accountType: txMeta.accountType, category: txMeta.category,
+      intent: intentType, entries: lines,
+      journalLines: lines.map(l=>({ account:l.account, type:COA_TYPE[l.account]||'Unknown', debit:l.dr||0, credit:l.cr||0 }))
+    };
   }
 };
 </script>
@@ -1477,44 +1796,93 @@ const app = {
     return ledger;
   },
   accountBalance(e) {
-    return (e.type==='Asset'||e.type==='Expense') ? e.dr-e.cr : e.cr-e.dr;
+    // Debit-normal: Asset, Expense, Drawings, Accumulated Depreciation (contra-asset)
+    // Credit-normal: Liability, Income, Equity (except Drawings)
+    if (e.type === 'Asset' || e.type === 'Expense') return e.dr - e.cr;
+    // Drawings is equity but debit-normal (reduces equity)
+    if (e.account === 'Drawings') return e.dr - e.cr;
+    // Accumulated Depreciation is contra-asset — credit increases it
+    if (e.account === 'Accumulated Depreciation') return e.cr - e.dr;
+    return e.cr - e.dr;
   },
   getBalances() {
     const L = this.buildLedger();
-    const incB={}, expB={};
-    COA.Income.forEach(a  => { const b=this.accountBalance(L[a]);  if(b!==0) incB[a]=b; });
-    COA.Expense.forEach(a => { const b=this.accountBalance(L[a]);  if(b!==0) expB[a]=b; });
+    const fmt = (acc) => {
+      if (!L[acc]) return 0;
+      return this.accountBalance(L[acc]);
+    };
+
+    // ── P&L ──
+    const incB = {}, expB = {};
+    COA.Income.forEach(a  => { const b = fmt(a); if (b !== 0) incB[a] = b; });
+    COA.Expense.forEach(a => { const b = fmt(a); if (b !== 0) expB[a] = b; });
     const totalIncome  = Object.values(incB).reduce((s,v)=>s+v,0);
     const totalExpense = Object.values(expB).reduce((s,v)=>s+v,0);
     const netProfit    = totalIncome - totalExpense;
-    const cash = this.accountBalance(L['Cash']);
-    const bank = this.accountBalance(L['Bank']);
-    const aB={};
-    COA.Asset.filter(a=>a!=='Cash'&&a!=='Bank').forEach(a=>{ const b=this.accountBalance(L[a]); if(b!==0) aB[a]=b; });
-    const totalOtherAssets = Object.values(aB).reduce((s,v)=>s+v,0);
-    const totalAssets      = cash+bank+totalOtherAssets;
-    const lB={};
-    COA.Liability.forEach(a=>{ const b=this.accountBalance(L[a]); if(b!==0) lB[a]=b; });
+
+    // ── Balance Sheet — Assets ──
+    const cash = fmt('Cash');
+    const bank = fmt('Bank');
+    const aR   = fmt('Accounts Receivable');
+    const inv  = fmt('Inventory');
+    const aB   = {}; // other assets
+    COA.Asset.filter(a => !['Cash','Bank','Accounts Receivable','Inventory','Accumulated Depreciation'].includes(a))
+      .forEach(a => { const b = fmt(a); if (b !== 0) aB[a] = b; });
+    // Subtract accumulated depreciation from assets
+    const accumDep = fmt('Accumulated Depreciation');
+    const totalCurrentAssets = cash + bank + aR + inv;
+    const totalFixedAssets   = Object.values(aB).reduce((s,v)=>s+v,0) - accumDep;
+    const totalAssets        = totalCurrentAssets + totalFixedAssets;
+
+    // ── Balance Sheet — Liabilities ──
+    const lB = {};
+    COA.Liability.forEach(a => { const b = fmt(a); if (b !== 0) lB[a] = b; });
     const totalLiabilities = Object.values(lB).reduce((s,v)=>s+v,0);
-    const capital          = this.accountBalance(L['Capital']);
+
+    // ── Balance Sheet — Equity ──
+    const capital    = fmt('Capital');
+    const drawings   = fmt('Drawings');
+    // Retained earnings = net profit + previous retained earnings
     const retainedEarnings = netProfit;
-    const totalEquity      = capital+retainedEarnings;
-    const totalLiabEquity  = totalLiabilities+totalEquity;
-    let opCash=0, invCash=0, finCash=0;
-    State.biz.transactions.forEach(tx=>{
-      if(tx.status!=='confirmed'||!Array.isArray(tx.entries)) return;
-      tx.entries.forEach(e=>{
-        if(e.account!=='Cash'&&e.account!=='Bank') return;
-        const flow=(e.dr||0)-(e.cr||0);
-        if(tx.accountType==='Income'||tx.accountType==='Expense') opCash+=flow;
-        else if(tx.accountType==='Asset') invCash+=flow;
-        else if(tx.accountType==='Liability'||tx.accountType==='Equity') finCash+=flow;
+    const totalEquity      = capital - drawings + retainedEarnings;
+    const totalLiabEquity  = totalLiabilities + totalEquity;
+
+    // ── Cash Flow — based purely on Cash/Bank account movements ──
+    let opCash = 0, invCash = 0, finCash = 0;
+    State.biz.transactions.forEach(tx => {
+      if (tx.status !== 'confirmed' || !Array.isArray(tx.entries)) return;
+      tx.entries.forEach(e => {
+        if (e.account !== 'Cash' && e.account !== 'Bank') return;
+        const flow = (e.dr||0) - (e.cr||0); // + = cash in, - = cash out
+        const intent = tx.intent || '';
+        // Classify by intent for accuracy
+        if (['CASH_SALE','RECEIPT_FROM_DEBTOR','ADVANCE_RECEIVED'].includes(intent))
+          opCash += flow;
+        else if (['EXPENSE','SALARY_PAID','GST_PAYMENT','PAY_CREDITOR'].includes(intent))
+          opCash += flow;
+        else if (['ASSET_PURCHASE'].includes(intent))
+          invCash += flow;
+        else if (['LOAN_RECEIVED','LOAN_REPAYMENT','OWNER_INVESTMENT','DRAWINGS'].includes(intent))
+          finCash += flow;
+        else {
+          // Fallback: classify by accountType
+          const t = tx.accountType;
+          if (t === 'Income' || t === 'Expense') opCash  += flow;
+          else if (t === 'Asset')                invCash += flow;
+          else                                   finCash += flow;
+        }
       });
     });
-    return {cash,bank,totalAssets,netProfit,totalIncome,totalExpense,incomeBreakdown:incB,expenseBreakdown:expB,
-      assetBreakdown:aB,totalOtherAssets,liabilityBreakdown:lB,totalLiabilities,
-      capital,retainedEarnings,totalEquity,totalLiabEquity,
-      operatingCash:opCash,investingCash:invCash,financingCash:finCash,netCashChange:opCash+invCash+finCash};
+
+    return {
+      cash, bank, aR, inv, totalCurrentAssets, totalFixedAssets,
+      accumDep, totalAssets, netProfit, totalIncome, totalExpense,
+      incomeBreakdown: incB, expenseBreakdown: expB,
+      assetBreakdown: aB, liabilityBreakdown: lB, totalLiabilities,
+      capital, drawings, retainedEarnings, totalEquity, totalLiabEquity,
+      operatingCash: opCash, investingCash: invCash, financingCash: finCash,
+      netCashChange: opCash + invCash + finCash
+    };
   },
 
   /* DASHBOARD */
@@ -1572,77 +1940,116 @@ const app = {
 
   /* SMART ENTRY */
   async processChatInput() {
-    const inp = document.getElementById('chat-input');
-    const btn = document.getElementById('send-btn');
+    const inp  = document.getElementById('chat-input');
+    const btn  = document.getElementById('send-btn');
     const text = inp.value.trim();
     if (!text) return;
+
     const hist = document.getElementById('chat-history');
     const um = document.createElement('div');
-    um.className='msg user'; um.textContent=text; hist.appendChild(um);
-    inp.value=''; btn.innerHTML='<span class="spinner"></span>'; btn.disabled=true;
-    hist.scrollTop=hist.scrollHeight;
-    const parsed = NLP.parse(text);
-    if (parsed.amount===0) {
-      const em=document.createElement('div'); em.className='msg error';
-      em.textContent='⚠️ No amount found. Try: "Paid rent 5000" or "Sales 12000 with 18% GST"';
-      hist.appendChild(em); btn.innerHTML='Send'; btn.disabled=false; return;
+    um.className = 'msg user'; um.textContent = text; hist.appendChild(um);
+    inp.value = ''; btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
+    hist.scrollTop = hist.scrollHeight;
+
+    // ── ALWAYS use local engine first (it's authoritative) ──────────
+    // Backend smart-entry uses old engine → NEVER let it override local
+    const parsed = IntentEngine.parse(text);
+
+    if (parsed.amount === 0) {
+      const em = document.createElement('div'); em.className = 'msg error';
+      em.textContent = '⚠️ No amount found. Try: "Paid rent 5000 cash" or "Sales 50k with 18% GST"';
+      hist.appendChild(em); btn.innerHTML = 'Send ↵'; btn.disabled = false; return;
     }
-    let tx = null;
-    try {
-      const res = await DataAPI.smartEntry(text);
-      if (res&&res.success&&res.transaction) tx=res.transaction;
-    } catch(e) {}
-    if (!tx) tx = this.buildLocalTx(parsed, text);
+
+    const tx = JournalGenerator.generate(parsed);
+
+    if (!tx) {
+      const em = document.createElement('div'); em.className = 'msg error';
+      em.textContent = '⚠️ Could not generate a balanced journal. Please rephrase.';
+      hist.appendChild(em); btn.innerHTML = 'Send ↵'; btn.disabled = false; return;
+    }
+
     State.pendingTx = tx;
     this.renderConfirmCard(tx);
-    btn.innerHTML='Send'; btn.disabled=false;
-    hist.scrollTop=hist.scrollHeight;
+    btn.innerHTML = 'Send ↵'; btn.disabled = false;
+    hist.scrollTop = hist.scrollHeight;
   },
 
+  // Keep buildLocalTx as a passthrough for backwards compatibility
   buildLocalTx(parsed, origText) {
-    let netAmount=parsed.amount, gstAmount=0, grossAmount=parsed.amount;
-    if (parsed.gstRate>0) {
-      if (parsed.isInclusiveGST) {
-        netAmount=Math.round(parsed.amount/(1+parsed.gstRate/100));
-        gstAmount=parsed.amount-netAmount; grossAmount=parsed.amount;
-      } else {
-        gstAmount=Math.round(parsed.amount*parsed.gstRate/100);
-        grossAmount=parsed.amount+gstAmount;
-      }
+    // parsed may be old-format (from backend) — convert if needed
+    if (parsed.gstRate !== undefined && parsed.intent === undefined) {
+      // Old format — wrap into new format
+      const newParsed = {
+        amount: parsed.amount,
+        date:   parsed.date,
+        gst:    { rate: parsed.gstRate||0, inclusive: parsed.isInclusiveGST||false },
+        mode:   parsed.mode,
+        intent: { intent: parsed.accountType==='Income' ? 'CASH_SALE'
+                         : parsed.accountType==='Asset' ? 'ASSET_PURCHASE'
+                         : parsed.accountType==='Liability' ? 'LOAN_RECEIVED'
+                         : parsed.accountType==='Equity' ? 'OWNER_INVESTMENT'
+                         : 'EXPENSE',
+                  category: parsed.category },
+        desc:   parsed.desc || origText,
+        raw:    origText
+      };
+      return JournalGenerator.generate(newParsed) || { id:Date.now(), desc:origText, date:parsed.date, netAmount:parsed.amount, gstAmount:0, grossAmount:parsed.amount, gstRate:0, mode:'Cash', accountType:'Expense', category:'Miscellaneous Expense', entries:[] };
     }
-    const entries=[]; const acc=parsed.mode==='UPI'?'Bank':parsed.mode;
-    if      (parsed.accountType==='Expense')   { entries.push({account:parsed.category,dr:netAmount,cr:0}); if(gstAmount>0) entries.push({account:'Input Tax Credit',dr:gstAmount,cr:0}); entries.push({account:acc,dr:0,cr:grossAmount}); }
-    else if (parsed.accountType==='Income')    { entries.push({account:acc,dr:grossAmount,cr:0}); if(gstAmount>0) entries.push({account:'GST Payable',dr:0,cr:gstAmount}); entries.push({account:parsed.category,dr:0,cr:netAmount}); }
-    else if (parsed.accountType==='Asset')     { entries.push({account:parsed.category,dr:netAmount,cr:0}); entries.push({account:acc,dr:0,cr:netAmount}); }
-    else if (parsed.accountType==='Liability') { entries.push({account:acc,dr:netAmount,cr:0}); entries.push({account:parsed.category,dr:0,cr:netAmount}); }
-    else if (parsed.accountType==='Equity')    { entries.push({account:acc,dr:netAmount,cr:0}); entries.push({account:parsed.category,dr:0,cr:netAmount}); }
-    return {id:Date.now(),desc:parsed.desc||origText,date:parsed.date,netAmount,gstAmount,grossAmount,gstRate:parsed.gstRate,isInclusiveGST:parsed.isInclusiveGST,mode:parsed.mode,accountType:parsed.accountType,category:parsed.category,entries};
+    return JournalGenerator.generate(parsed) || { id:Date.now(), desc:origText, date:parsed.date||new Date().toISOString().split('T')[0], netAmount:parsed.amount, gstAmount:0, grossAmount:parsed.amount, gstRate:0, mode:'Cash', accountType:'Expense', category:'Miscellaneous Expense', entries:[] };
   },
 
   renderConfirmCard(tx) {
     const c = document.getElementById('confirm-container');
-    const entries = Array.isArray(tx.entries)?tx.entries:[];
+    const entries = Array.isArray(tx.entries) ? tx.entries : [];
     const drTotal = entries.reduce((s,e)=>s+(e.dr||0),0);
     const crTotal = entries.reduce((s,e)=>s+(e.cr||0),0);
-    const balanced = Math.abs(drTotal-crTotal)<1;
+    const balanced = Math.abs(drTotal-crTotal) < 1;
     TxStore.set(tx.id, tx);
+    const intentLabels = {
+      CASH_SALE:'💰 Cash Sale', CREDIT_SALE:'📋 Credit Sale',
+      RECEIPT_FROM_DEBTOR:'🏦 Receipt from Debtor', EXPENSE:'💸 Expense',
+      CREDIT_PURCHASE:'📦 Credit Purchase', PAY_CREDITOR:'✅ Pay Supplier',
+      LOAN_RECEIVED:'🏦 Loan Received', LOAN_REPAYMENT:'🔄 Loan Repayment',
+      ASSET_PURCHASE:'🏭 Asset Purchase', DEPRECIATION:'📉 Depreciation',
+      OWNER_INVESTMENT:'💼 Owner Investment', DRAWINGS:'👤 Drawings',
+      GST_PAYMENT:'📊 GST Payment', SALARY_PAID:'👥 Salary Paid',
+      SALARY_ACCRUAL:'📝 Salary Accrual', ADVANCE_RECEIVED:'⬇️ Advance Received'
+    };
+    const intentLabel = intentLabels[tx.intent] || tx.accountType;
     c.innerHTML = `<div class="confirm-card">
       <div class="confirm-head">
-        <span>📋 Double-Entry Verification ${balanced?'✅':'⚠️ Unbalanced'}</span>
+        <span>${balanced?'✅ Balanced':'⚠️ UNBALANCED'} — ${intentLabel}</span>
         <span class="confirm-close" onclick="app.cancelPending()">✕</span>
       </div>
       <div class="confirm-body">
-        <div class="confirm-row"><span>Description</span><span>${tx.desc||'—'}</span></div>
-        <div class="confirm-row"><span>Type</span><span>${tx.accountType}</span></div>
-        <div class="confirm-row"><span>Amount</span><span>${this.fmt(tx.netAmount)}</span></div>
+        <div class="confirm-row"><span>Description</span><span style="max-width:60%;text-align:right;font-weight:600">${tx.desc||'—'}</span></div>
+        <div class="confirm-row"><span>Intent Detected</span><span style="color:var(--brand);font-weight:600">${intentLabel}</span></div>
+        <div class="confirm-row"><span>Net Amount</span><span style="font-weight:700">${this.fmt(tx.netAmount)}</span></div>
         ${tx.gstAmount>0?`<div class="confirm-row"><span>GST (${tx.gstRate}%)</span><span class="text-success">+${this.fmt(tx.gstAmount)}</span></div>`:''}
+        <div style="margin:10px 0 4px;font-size:11px;font-weight:700;color:var(--text-3);letter-spacing:.05em;text-transform:uppercase">Journal Entry</div>
         <table class="mini-ledger">
-          <thead><tr><th>Account</th><th>Debit</th><th>Credit</th></tr></thead>
-          <tbody>${entries.map(e=>`<tr><td>${e.account}</td><td class="dr">${e.dr>0?'Dr '+e.dr:''}</td><td class="cr">${e.cr>0?'Cr '+e.cr:''}</td></tr>`).join('')}</tbody>
+          <thead><tr><th>Account</th><th>Type</th><th>Debit ₹</th><th>Credit ₹</th></tr></thead>
+          <tbody>
+            ${entries.map(e=>{
+              const t = COA_TYPE[e.account]||'';
+              return `<tr>
+                <td style="font-weight:600">${e.account}</td>
+                <td style="color:var(--text-3);font-size:10px">${t}</td>
+                <td class="dr">${e.dr>0?e.dr.toLocaleString('en-IN'):''}</td>
+                <td class="cr">${e.cr>0?e.cr.toLocaleString('en-IN'):''}</td>
+              </tr>`;
+            }).join('')}
+            <tr style="background:var(--surface-2);font-weight:700;font-size:11px">
+              <td colspan="2" style="color:var(--text-3)">Total</td>
+              <td class="dr">${drTotal.toLocaleString('en-IN')}</td>
+              <td class="cr">${crTotal.toLocaleString('en-IN')}</td>
+            </tr>
+          </tbody>
         </table>
         <div class="confirm-btns">
           <button class="btn btn-danger" onclick="app.cancelPending()">Cancel</button>
-          <button class="btn btn-primary" onclick="app.confirmPending()">✅ Confirm Entry</button>
+          <button class="btn btn-primary" onclick="app.confirmPending()">✅ Post Entry</button>
           <button class="btn btn-outline" style="margin-left:auto" onclick="app.openEditById(${tx.id})">✏️ Edit</button>
         </div>
       </div>
@@ -1724,40 +2131,173 @@ const app = {
   },
 
   renderReports() {
-    const b=this.getBalances();
-    const fmt=n=>this.fmt(n);
-    const sh=label=>`<div style="font-size:10.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--text-3);padding:14px 0 5px;border-bottom:2px solid var(--border);margin-bottom:4px;">${label}</div>`;
-    const row=(label,amount,{bold=false,color=null,indent=false,topLine=false}={})=>`
-      <div style="display:flex;justify-content:space-between;padding:${bold?'8px':'3px'} 0;
-        ${indent?'padding-left:1.4rem;color:var(--text-3);font-size:13px;':''}
-        ${bold?'font-weight:700;':''}
-        ${topLine?'border-top:2px solid var(--border);margin-top:10px;padding-top:10px;':''}
-        ${color?`color:${color};`:''}">
-        <span>${label}</span><span>${fmt(amount)}</span>
+    const b = this.getBalances();
+    const fmt = n => this.fmt(n);
+
+    // ── Helpers ─────────────────────────────────────────────────────
+    const sh = label => `
+      <div style="font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+        color:var(--text-3);padding:16px 0 5px;border-bottom:2px solid var(--border);margin-bottom:2px;">
+        ${label}
       </div>`;
-    const noData=`<div style="color:var(--text-3);font-size:13px;padding:4px 0 4px 1.4rem">None recorded yet</div>`;
 
-    if (this.reportView==='pl') {
-      document.getElementById('report-title').textContent='Profit & Loss Statement';
+    const subhead = label => `
+      <div style="font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+        color:var(--text-3);padding:10px 0 3px 0;margin-top:4px;opacity:.7;">${label}</div>`;
+
+    const row = (label, amount, { bold=false, color=null, indent=false, topLine=false, indent2=false } = {}) => `
+      <div style="display:flex;justify-content:space-between;align-items:center;
+        padding:${bold?'9px':'4px'} 0;
+        ${indent ? 'padding-left:1.4rem;' : ''}
+        ${indent2? 'padding-left:2.8rem;' : ''}
+        ${bold   ? 'font-weight:700;' : 'font-size:13.5px;'}
+        ${topLine? 'border-top:2px solid var(--border);margin-top:12px;padding-top:12px;' : ''}
+        ${!bold && !color ? 'color:var(--text-2);' : ''}
+        ${color  ? `color:${color};` : ''}">
+        <span>${label}</span>
+        <span style="${bold?'font-weight:700;font-size:14px;':''}${color?`color:${color};`:''}">
+          ${amount < 0 ? `(${fmt(Math.abs(amount))})` : fmt(amount)}
+        </span>
+      </div>`;
+
+    const noData = `<div style="color:var(--text-3);font-size:13px;padding:4px 0 4px 1.4rem;font-style:italic">None recorded</div>`;
+
+    // ══════════════════════════════════════════════════════════════
+    // PROFIT & LOSS
+    // ══════════════════════════════════════════════════════════════
+    if (this.reportView === 'pl') {
+      document.getElementById('report-title').textContent = 'Profit & Loss Statement';
       const incR = Object.keys(b.incomeBreakdown).length
-        ? Object.entries(b.incomeBreakdown).map(([a,v])=>row(a,v,{indent:true})).join('') : noData;
+        ? Object.entries(b.incomeBreakdown).map(([a,v]) => row(a, v, {indent:true})).join('') : noData;
       const expR = Object.keys(b.expenseBreakdown).length
-        ? Object.entries(b.expenseBreakdown).map(([a,v])=>row(a,v,{indent:true})).join('') : noData;
-      const pc=b.netProfit>=0?'var(--success)':'var(--danger)';
-      document.getElementById('report-display').innerHTML=`${sh('Income')}${incR}${row('Total Income',b.totalIncome,{bold:true})}${sh('Expenses')}${expR}${row('Total Expenses',b.totalExpense,{bold:true})}${row(b.netProfit>=0?'📈 Net Profit':'📉 Net Loss',Math.abs(b.netProfit),{bold:true,topLine:true,color:pc})}`;
+        ? Object.entries(b.expenseBreakdown).map(([a,v]) => row(a, v, {indent:true})).join('') : noData;
+      const pc = b.netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+      const grossProfit = b.totalIncome - (b.expenseBreakdown['Cost of Goods Sold'] || 0);
 
-    } else if (this.reportView==='bs') {
-      document.getElementById('report-title').textContent='Balance Sheet';
-      const aRows=[row('Cash',b.cash,{indent:true}),row('Bank',b.bank,{indent:true}),...Object.entries(b.assetBreakdown).map(([a,v])=>row(a,v,{indent:true}))].join('');
-      const lRows=Object.keys(b.liabilityBreakdown).length?Object.entries(b.liabilityBreakdown).map(([a,v])=>row(a,v,{indent:true})).join(''):noData;
-      const balanced=Math.abs(b.totalAssets-b.totalLiabEquity)<1;
-      document.getElementById('report-display').innerHTML=`${sh('Assets')}${aRows}${row('Total Assets',b.totalAssets,{bold:true})}${sh('Liabilities')}${lRows}${row('Total Liabilities',b.totalLiabilities,{bold:true})}${sh("Owner's Equity")}${row('Capital',b.capital,{indent:true})}${row('Retained Earnings',b.retainedEarnings,{indent:true,color:b.retainedEarnings>=0?'var(--success)':'var(--danger)'})}${row('Total Equity',b.totalEquity,{bold:true})}${row('Total Liabilities + Equity',b.totalLiabEquity,{bold:true,topLine:true})}<div style="margin-top:14px;padding:10px 14px;text-align:center;font-weight:700;border-radius:6px;background:${balanced?'var(--success-bg)':'var(--danger-bg)'};color:${balanced?'#065f46':'#b91c1c'}">${balanced?'✅ Balance Sheet is BALANCED':'❌ UNBALANCED — gap: '+fmt(Math.abs(b.totalAssets-b.totalLiabEquity))}</div>`;
+      document.getElementById('report-display').innerHTML = `
+        ${sh('Revenue')}
+        ${incR}
+        ${row('Total Revenue', b.totalIncome, {bold:true})}
 
-    } else if (this.reportView==='cf') {
-      document.getElementById('report-title').textContent='Cash Flow Statement';
-      const cfRow=(label,amount)=>{const c=amount>=0?'var(--success)':'var(--danger)';return `<div style="display:flex;justify-content:space-between;padding:3px 0 3px 1.4rem;color:var(--text-3);font-size:13px;"><span>${label}</span><span style="color:${c};font-weight:600;">${amount>=0?'+':''}${fmt(amount)}</span></div>`;};
-      const nc=b.netCashChange;
-      document.getElementById('report-display').innerHTML=`${sh('Operating Activities')}<div style="color:var(--text-3);font-size:12px;padding:2px 0 4px 1.4rem">Day-to-day income &amp; expenses</div>${cfRow('Net Cash from Operations',b.operatingCash)}${row('Subtotal',b.operatingCash,{bold:true,color:b.operatingCash>=0?'var(--success)':'var(--danger)'})}${sh('Investing Activities')}<div style="color:var(--text-3);font-size:12px;padding:2px 0 4px 1.4rem">Buying/selling assets</div>${cfRow('Net Cash from Investing',b.investingCash)}${row('Subtotal',b.investingCash,{bold:true,color:b.investingCash>=0?'var(--success)':'var(--danger)'})}${sh('Financing Activities')}<div style="color:var(--text-3);font-size:12px;padding:2px 0 4px 1.4rem">Loans, capital, contributions</div>${cfRow('Net Cash from Financing',b.financingCash)}${row('Subtotal',b.financingCash,{bold:true,color:b.financingCash>=0?'var(--success)':'var(--danger)'})}${row(nc>=0?'📈 Net Increase in Cash':'📉 Net Decrease in Cash',Math.abs(nc),{bold:true,topLine:true,color:nc>=0?'var(--success)':'var(--danger)'})}<div style="margin-top:12px;padding:10px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;display:flex;justify-content:space-between;font-size:13px;"><span style="color:var(--text-3)">Closing Cash &amp; Bank</span><span class="fw-700">${fmt(b.cash+b.bank)}</span></div>`;
+        ${sh('Cost of Goods Sold')}
+        ${b.expenseBreakdown['Cost of Goods Sold']
+          ? row('Cost of Goods Sold', b.expenseBreakdown['Cost of Goods Sold'] || 0, {indent:true})
+          : noData}
+        ${row('Gross Profit', grossProfit, {bold:true, color: grossProfit>=0?'var(--success)':'var(--danger)'})}
+
+        ${sh('Operating Expenses')}
+        ${Object.entries(b.expenseBreakdown)
+            .filter(([a]) => a !== 'Cost of Goods Sold')
+            .map(([a,v]) => row(a, v, {indent:true})).join('') || noData}
+        ${row('Total Operating Expenses', b.totalExpense - (b.expenseBreakdown['Cost of Goods Sold']||0), {bold:true})}
+
+        ${row(b.netProfit>=0 ? '📈 Net Profit' : '📉 Net Loss',
+          Math.abs(b.netProfit), {bold:true, topLine:true, color:pc})}
+      `;
+
+    // ══════════════════════════════════════════════════════════════
+    // BALANCE SHEET
+    // ══════════════════════════════════════════════════════════════
+    } else if (this.reportView === 'bs') {
+      document.getElementById('report-title').textContent = 'Balance Sheet';
+      const balanced = Math.abs(b.totalAssets - b.totalLiabEquity) < 1;
+
+      // Current Assets
+      const currentAssetRows = [
+        b.cash  !== 0 ? row('Cash',               b.cash,  {indent:true}) : '',
+        b.bank  !== 0 ? row('Bank',               b.bank,  {indent:true}) : '',
+        b.aR    !== 0 ? row('Accounts Receivable', b.aR,   {indent:true}) : '',
+        b.inv   !== 0 ? row('Inventory',           b.inv,  {indent:true}) : '',
+      ].filter(Boolean).join('') || `<div style="padding-left:1.4rem;color:var(--text-3);font-size:13px">No current assets</div>`;
+
+      // Fixed Assets
+      const fixedAssetRows = Object.keys(b.assetBreakdown).length
+        ? Object.entries(b.assetBreakdown).map(([a,v]) => row(a, v, {indent:true})).join('')
+          + (b.accumDep > 0 ? row('Less: Accumulated Depreciation', -b.accumDep, {indent:true, color:'var(--danger)'}) : '')
+        : `<div style="padding-left:1.4rem;color:var(--text-3);font-size:13px">No fixed assets</div>`;
+
+      // Liabilities
+      const liabRows = Object.keys(b.liabilityBreakdown).length
+        ? Object.entries(b.liabilityBreakdown).map(([a,v]) => row(a, v, {indent:true})).join('') : noData;
+
+      document.getElementById('report-display').innerHTML = `
+        ${sh('Assets')}
+
+        ${subhead('Current Assets')}
+        ${currentAssetRows}
+        ${row('Total Current Assets', b.totalCurrentAssets, {bold:true})}
+
+        ${subhead('Fixed Assets')}
+        ${fixedAssetRows}
+        ${row('Total Fixed Assets', b.totalFixedAssets, {bold:true})}
+
+        ${row('TOTAL ASSETS', b.totalAssets, {bold:true, topLine:true, color:'var(--brand)'})}
+
+        ${sh('Liabilities')}
+        ${liabRows}
+        ${row('Total Liabilities', b.totalLiabilities, {bold:true})}
+
+        ${sh("Owner's Equity")}
+        ${row('Capital Invested',     b.capital,          {indent:true})}
+        ${b.drawings > 0 ? row('Less: Drawings', -b.drawings, {indent:true, color:'var(--danger)'}) : ''}
+        ${row(b.retainedEarnings>=0 ? 'Add: Net Profit' : 'Less: Net Loss',
+              b.retainedEarnings, {indent:true, color: b.retainedEarnings>=0?'var(--success)':'var(--danger)'})}
+        ${row('Total Equity', b.totalEquity, {bold:true})}
+
+        ${row('Total Liabilities + Equity', b.totalLiabEquity, {bold:true, topLine:true, color:'var(--brand)'})}
+
+        <div style="margin-top:16px;padding:12px 16px;text-align:center;font-weight:700;font-size:13px;
+          border-radius:8px;background:${balanced?'var(--success-bg)':'var(--danger-bg)'};
+          color:${balanced?'#065f46':'#b91c1c'};border:1px solid ${balanced?'#bbf7d0':'#fecaca'}">
+          ${balanced
+            ? '✅ Balance Sheet is BALANCED — Assets = Liabilities + Equity'
+            : '❌ UNBALANCED — Difference: ' + fmt(Math.abs(b.totalAssets - b.totalLiabEquity))}
+        </div>
+      `;
+
+    // ══════════════════════════════════════════════════════════════
+    // CASH FLOW STATEMENT
+    // ══════════════════════════════════════════════════════════════
+    } else if (this.reportView === 'cf') {
+      document.getElementById('report-title').textContent = 'Cash Flow Statement';
+
+      const cfRow = (label, amount) => {
+        const c = amount >= 0 ? 'var(--success)' : 'var(--danger)';
+        return `<div style="display:flex;justify-content:space-between;padding:4px 0 4px 1.4rem;color:var(--text-2);font-size:13.5px;">
+          <span>${label}</span>
+          <span style="color:${c};font-weight:600;">${amount>=0?'+':''}${fmt(amount)}</span>
+        </div>`;
+      };
+
+      const nc = b.netCashChange;
+      document.getElementById('report-display').innerHTML = `
+        ${sh('A. Operating Activities')}
+        <div style="color:var(--text-3);font-size:12px;padding:3px 0 6px 1.4rem;font-style:italic">Day-to-day income &amp; expenses</div>
+        ${cfRow('Cash from Sales &amp; Services', b.operatingCash > 0 ? b.operatingCash : 0)}
+        ${cfRow('Cash paid for Expenses', b.operatingCash < 0 ? b.operatingCash : 0)}
+        ${row('Net Cash from Operations', b.operatingCash, {bold:true, color:b.operatingCash>=0?'var(--success)':'var(--danger)'})}
+
+        ${sh('B. Investing Activities')}
+        <div style="color:var(--text-3);font-size:12px;padding:3px 0 6px 1.4rem;font-style:italic">Purchase &amp; sale of assets</div>
+        ${cfRow('Purchase of Assets', b.investingCash)}
+        ${row('Net Cash from Investing', b.investingCash, {bold:true, color:b.investingCash>=0?'var(--success)':'var(--danger)'})}
+
+        ${sh('C. Financing Activities')}
+        <div style="color:var(--text-3);font-size:12px;padding:3px 0 6px 1.4rem;font-style:italic">Loans, capital &amp; drawings</div>
+        ${cfRow('Capital &amp; Loans Received', b.financingCash > 0 ? b.financingCash : 0)}
+        ${cfRow('Loan Repayments &amp; Drawings', b.financingCash < 0 ? b.financingCash : 0)}
+        ${row('Net Cash from Financing', b.financingCash, {bold:true, color:b.financingCash>=0?'var(--success)':'var(--danger)'})}
+
+        ${row(nc>=0 ? '📈 Net Increase in Cash' : '📉 Net Decrease in Cash',
+          nc, {bold:true, topLine:true, color:nc>=0?'var(--success)':'var(--danger)'})}
+
+        <div style="margin-top:12px;padding:12px 16px;background:var(--brand-light);
+          border:1px solid #bfdbfe;border-radius:8px;
+          display:flex;justify-content:space-between;align-items:center;font-size:13.5px;">
+          <span style="color:var(--brand);font-weight:700;">Closing Cash &amp; Bank Balance</span>
+          <span style="font-weight:800;font-size:16px;color:var(--brand)">${fmt(b.cash + b.bank)}</span>
+        </div>
+      `;
     }
   },
 

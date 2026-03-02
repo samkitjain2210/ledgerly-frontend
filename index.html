@@ -723,6 +723,15 @@ input[type="date"], select {
   .stat-value { font-size: 16px !important; }
 }
 
+/* Skeleton loading */
+.skeleton {
+  background: linear-gradient(90deg, var(--border) 25%, var(--surface-2) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 4px;
+}
+@keyframes shimmer { 0%{background-position:200%} 100%{background-position:-200%} }
+
 /* Print */
 @media print {
   #sidebar, #topbar, .btn, .chat-input-row,
@@ -1210,20 +1219,40 @@ const State = {
   async init() {
     const token = DataAPI.getToken();
     if (!token) { app.navigate('auth'); return; }
-    const data = await DataAPI.getSync();
+
+    // Show loading overlay while syncing
+    app.navigate('auth');
+    const msgEl = document.getElementById('auth-msg');
+    if (msgEl) { msgEl.style.color = 'var(--brand)'; msgEl.textContent = '🔄 Loading your data…'; }
+
+    // Try sync — retry once if first attempt fails (Render may still be waking)
+    let data = await DataAPI.getSync();
+    if (!data) {
+      if (msgEl) msgEl.textContent = '⏳ Server waking up, retrying in 5s…';
+      await new Promise(r => setTimeout(r, 5000));
+      data = await DataAPI.getSync();
+    }
+
     if (data && data.user) {
-      this.currentUser = data.user;
-      this.businesses  = data.businesses || [];
+      this.currentUser  = data.user;
+      this.businesses   = data.businesses  || [];
       this.transactions = data.transactions || [];
       const name = data.user.name || data.user.email || 'User';
-      document.getElementById('sidebar-username').textContent = name;
-      document.getElementById('user-avatar').textContent = name.slice(0,2).toUpperCase();
+      const avatarEl   = document.getElementById('user-avatar');
+      const usernameEl = document.getElementById('sidebar-username');
+      if (avatarEl)   avatarEl.textContent   = name.slice(0,2).toUpperCase();
+      if (usernameEl) usernameEl.textContent  = name;
       if (this.businesses.length > 0) {
         this.currentBizId = this.businesses[0].id;
         app.updateBizSelect();
       }
       app.navigate('dashboard');
-    } else { app.navigate('auth'); }
+    } else {
+      // Token invalid or server down — go back to login
+      DataAPI.clearToken();
+      app.navigate('auth');
+      if (msgEl) { msgEl.style.color = 'var(--danger)'; msgEl.textContent = 'Session expired. Please log in again.'; }
+    }
   },
   async save() {
     await DataAPI.saveSync(this.transactions.filter(t=>t.businessId==this.currentBizId));
@@ -1274,8 +1303,26 @@ const app = {
     btn.innerHTML = `<span id="auth-btn-text">${this.authMode==='login'?'Sign In':'Create Account'}</span>`;
     if (res && res.token) {
       DataAPI.setToken(res.token);
-      msg.style.color = 'var(--success)'; msg.textContent = 'Success! Loading...';
-      setTimeout(() => State.init(), 800);
+      msg.style.color = 'var(--success)';
+      msg.textContent = '✅ Success! Loading your dashboard…';
+
+      // Load state directly from login response — no extra getSync needed
+      State.currentUser  = res.user;
+      State.businesses   = res.businesses  || [];
+      State.transactions = res.transactions || [];
+
+      const name2 = res.user?.name || res.user?.email || 'User';
+      const avatarEl   = document.getElementById('user-avatar');
+      const usernameEl = document.getElementById('sidebar-username');
+      if (avatarEl)   avatarEl.textContent  = name2.slice(0,2).toUpperCase();
+      if (usernameEl) usernameEl.textContent = name2;
+
+      if (State.businesses.length > 0) {
+        State.currentBizId = State.businesses[0].id;
+        this.updateBizSelect();
+      }
+
+      setTimeout(() => this.navigate('dashboard'), 400);
     } else {
       msg.style.color = 'var(--danger)';
       msg.textContent = res ? (res.error||'Authentication failed') : 'Could not connect to server';
@@ -1286,32 +1333,49 @@ const app = {
     if (confirm('Sign out?')) { DataAPI.clearToken(); TxStore.clear(); location.reload(); }
   },
 
-  /* NAVIGATION */
+  /* NAVIGATION — uses explicit style.display to beat CSS specificity */
   navigate(view) {
     closeSidebar();
     const isAuth = view === 'auth';
-    document.getElementById('sidebar').style.display = isAuth ? 'none' : '';
-    document.getElementById('topbar').style.display  = isAuth ? 'none' : '';
-    document.getElementById('bottom-nav').style.display = isAuth ? 'none' : '';
 
-    document.querySelectorAll('.view').forEach(s => { s.classList.remove('active'); s.style.display=''; });
+    // Show/hide shell elements
+    const sidebar  = document.getElementById('sidebar');
+    const topbar   = document.getElementById('topbar');
+    const bottomNav = document.getElementById('bottom-nav');
+    if (sidebar)  sidebar.style.display  = isAuth ? 'none' : 'flex';
+    if (topbar)   topbar.style.display   = isAuth ? 'none' : 'flex';
+    if (bottomNav) bottomNav.style.display = isAuth ? 'none' : 'block';
+
+    // Explicitly hide ALL views (overrides any CSS including #id selectors)
+    document.querySelectorAll('.view').forEach(s => {
+      s.style.display = 'none';
+      s.classList.remove('active');
+    });
+
+    // Show only the target view
     const sec = document.getElementById('view-' + view);
-    if (sec) { sec.classList.add('active'); if (view==='auth') sec.style.display='flex'; }
+    if (sec) {
+      sec.classList.add('active');
+      sec.style.display = view === 'auth' ? 'flex' : 'block';
+    }
 
+    // Update sidebar nav active state
     document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
     const nb = document.querySelector(`.nav-item[data-view="${view}"]`);
     if (nb) nb.classList.add('active');
 
+    // Update bottom nav active state
     document.querySelectorAll('.bnav-btn').forEach(b => b.classList.remove('active'));
-    const bb = document.getElementById('bnav-'+view);
+    const bb = document.getElementById('bnav-' + view);
     if (bb) bb.classList.add('active');
 
-    const titles = {dashboard:'Dashboard',input:'Smart Entry',upload:'Bank Import',reports:'Reports'};
+    // Update page title
+    const titles = { dashboard:'Dashboard', input:'Smart Entry', upload:'Bank Import', reports:'Reports' };
     const te = document.getElementById('page-title');
     if (te && titles[view]) te.textContent = titles[view];
 
-    if (view==='dashboard') this.renderDashboard();
-    if (view==='reports')   this.renderReports();
+    if (view === 'dashboard') this.renderDashboard();
+    if (view === 'reports')   this.renderReports();
   },
 
   updateBizSelect() {
@@ -1694,10 +1758,60 @@ const app = {
 
   /* INIT */
   init() {
-    const dl=document.getElementById('cat-list');
-    Object.values(COA).flat().forEach(c=>{ const o=document.createElement('option'); o.value=c; dl.appendChild(o); });
+    const dl = document.getElementById('cat-list');
+    Object.values(COA).flat().forEach(c => {
+      const o = document.createElement('option'); o.value = c; dl.appendChild(o);
+    });
+
+    // ── Render wake-up ping ──────────────────────────
+    // Free Render servers sleep after 15 min. First request takes 30-60s.
+    // We ping immediately on page load and show a friendly countdown.
+    this._pingServer();
+
     State.init();
-  }
+  },
+
+  _pingServer() {
+    const statusEl = document.getElementById('server-status');
+    const msgEl    = document.getElementById('auth-msg');
+
+    // Show "waking up" warning if server doesn't respond in 3s
+    const wakeTimer = setTimeout(() => {
+      if (statusEl) { statusEl.className = 'server-status syncing'; statusEl.textContent = 'Waking up…'; }
+      if (msgEl && !msgEl.textContent) {
+        let secs = 45;
+        msgEl.style.color = 'var(--warning)';
+        msgEl.textContent = `⏳ Server is waking up… (~${secs}s)`;
+        const tick = setInterval(() => {
+          secs--;
+          if (secs <= 0 || !msgEl.isConnected) { clearInterval(tick); return; }
+          // Only show if user hasn't started typing
+          const emailVal = document.getElementById('auth-email')?.value;
+          if (!emailVal) msgEl.textContent = `⏳ Server is waking up… (~${secs}s)`;
+        }, 1000);
+      }
+    }, 3000);
+
+    // Actual ping
+    fetch(API_URL.replace('/api', '/'))
+      .then(res => {
+        clearTimeout(wakeTimer);
+        if (statusEl) { statusEl.className = 'server-status online'; statusEl.textContent = 'Online'; }
+        if (msgEl && msgEl.textContent.includes('waking')) {
+          msgEl.style.color = 'var(--success)';
+          msgEl.textContent = '✅ Server is ready. You can log in!';
+          setTimeout(() => { if (msgEl.textContent.includes('ready')) msgEl.textContent = ''; }, 3000);
+        }
+      })
+      .catch(() => {
+        clearTimeout(wakeTimer);
+        if (statusEl) { statusEl.className = 'server-status offline'; statusEl.textContent = 'Offline'; }
+        if (msgEl && !msgEl.textContent) {
+          msgEl.style.color = 'var(--danger)';
+          msgEl.textContent = '⚠️ Cannot reach server. Check your connection.';
+        }
+      });
+  },
 };
 
 /* Modal overlay click to close */
